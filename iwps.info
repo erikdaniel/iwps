@@ -1,0 +1,9 @@
+name = IWPS
+description = Score keeping module for IWPS.
+package = PSi
+core = 7.x
+dependencies[] = image
+files[] = iwps.test
+files[] = iwps.install
+files[] = iwps.module
+files[] = iwps_menu.test

@@ -1,0 +1,111 @@
+<?php
+/**
+ * Implement hook_menu().
+ */
+
+function iwps_menu() {
+  $items = array();
+
+  $items['node/%node/draw'] = array(
+    'title' => 'Set Draw',
+    'description' => 'Draw for this tournament.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('iwps_draw_form', 1),
+    'access callback' => array('iwps_draw_access'),
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    );
+  return $items;
+};
+
+/**
+ * Callback access method for draw tab.
+ */
+function iwps_draw_access($node) {
+  return $node->type == 'individual_tournament' && user_access('administer content');
+}
+
+/**
+ * Callback method for draw tab.
+ */
+function iwps_draw_form($form, &$form_state, $node) {
+  $form_state['iwps']['node'] = $node;
+
+  $num_competitors = $node->field_num_competitors['und'][0]['value'];
+  $draw = array();
+  $result = db_query('SELECT uid, drawNum FROM {iwps_draw} WHERE tid = :tid', array(':tid' => $node->nid));
+  foreach($result as $record) {
+    $draw[$record->uid] = $record->drawnum;
+  }
+  $comp = field_get_items('node', $node, 'field_competitors');
+  $users = array();
+  foreach ($comp as $u) {
+    $users[] = $u['uid'];
+  }
+  $competitors = user_load_multiple($users);
+  $form['draw'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
+  foreach ($competitors as $uid => $user) {
+    $form['draw'][$uid] = array(
+      '#type' => 'textfield',
+      '#title' => t('%name draw number', array('%name' => $user->name)),
+      '#description' => t('Draw for this user'),
+      '#size' => 10,
+      '#maxlength' => 2,
+      '#required' => TRUE,
+    ); 
+    if (isset($draw[$uid])) {
+      $form['draw'][$uid]['#default_value'] = $draw[$uid];
+    }
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save Draw'),
+  );
+  return $form;
+}
+
+/**
+* Validate the form.
+*/
+function iwps_draw_form_validate($form, &$form_state) {
+  // We notify the form API that this field has failed validation.
+  $draw = $form_state['values']['draw'];
+  $max = intval($form_state['iwps']['node']->field_num_competitors['und'][0]['value']);
+  foreach ($draw as $uid => $val) {
+    if (!is_numeric($val) || intval($val) > $max) {
+      $user = user_load($uid);
+       form_set_error('draw][' . $uid , t('%name has a non-numeric or out of range entry.', array('%name' => $user->name)));
+    }
+
+    foreach ($draw as $ouid => $oval) {
+      if ($uid != $ouid && $val == $oval ) {
+      $user = user_load($uid);
+       form_set_error('draw][' . $uid , t('%name has a duplicate draw number', array('%name' => $user->name)));
+      }
+    }
+  }
+}
+
+/**
+ * Form builder; display confirmation for draw form.
+ */
+function iwps_draw_form_submit($form, &$form_state) {
+  $nid = $form_state['iwps']['node']->nid;
+
+  // delete the previous draw.
+  $result = db_query('DELETE FROM {iwps_draw} WHERE tid = :tid', array(':tid' => $nid));
+
+  $draw = $form_state['values']['draw'];
+  $sql = '';
+
+  foreach($draw as $uid => $val) {
+    // create record
+    $record = new stdClass();
+    $record->tid = $nid;
+    $record->uid = $uid;
+    $record->drawNum = $val;
+    drupal_write_record('iwps_draw', $record);
+  }
+
+  drupal_set_message(t('Draw for %node has been saved.', array('%node' => $form_state['iwps']['node']->title)));
+}
