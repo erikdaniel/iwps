@@ -4,44 +4,70 @@
  */
 function iwps_schema() {
 
-$schema['iwps_draw'] = array(
-  'description' => 'Draw for IWPS module',
-  'fields' => array(
-    'did' => array(
-      'description' => 'Key for Draw Number Id.',
-      'type' => 'serial',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
+  $schema['iwps_draw'] = array(
+    'description' => 'Draw for IWPS module',
+    'fields' => array(
+      'did' => array(
+        'description' => 'Key for Draw Number Id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'tid' => array(
+        'description' => 'Tournament id. Maps to {node}.nid',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'draw_number' => array(
+        'description' => 'Draw Number',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => 'User id with this draw maps to {users}.uid',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
-    'tid' => array(
-      'description' => 'Tournament id. Maps to {node}.nid',
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0,
+    'primary key' => array('did'),
+    'indexes' => array(
+      'tid' => array('tid'),
+      'uid' => array('uid'),
     ),
-    'drawNum' => array(
-      'description' => 'Draw Number',
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0,
+  );
+
+  $schema['iwps_bout_schematic'] = array(
+    'description' => 'Schematic for individual tournament.',
+    'fields' => array(
+      'bsid' => array(
+        'description' => 'Schematic id',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'bid' => array(
+        'description' => 'Bout id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'draw_number' => array(
+        'description' => 'Draw number for poet',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
-    'uid' => array(
-      'description' => 'User id with this draw maps to {users}.uid',
-      'type' => 'int',
-      'unsigned' => TRUE,
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('did'),
-  'indexes' => array(
-    'tid' => array('tid'),
-    'uid' => array('uid'),
-  ),
-);
- 
+    'primary key' => array('bsid'),
+  );
   return $schema;
 
 }

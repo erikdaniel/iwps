@@ -33,34 +33,43 @@ function iwps_draw_form($form, &$form_state, $node) {
 
   $num_competitors = $node->field_num_competitors['und'][0]['value'];
   $draw = array();
-  $result = db_query('SELECT uid, drawNum FROM {iwps_draw} WHERE tid = :tid', array(':tid' => $node->nid));
+  $result = db_query('SELECT uid, draw_number FROM {iwps_draw} WHERE tid = :tid', array(':tid' => $node->nid));
   foreach($result as $record) {
-    $draw[$record->uid] = $record->drawnum;
+    $draw[$record->uid] = $record->draw_number;
   }
-  $comp = field_get_items('node', $node, 'field_competitors');
+  $comp = field_get_items('node', $node, 'field_competing_poets');
   $users = array();
-  foreach ($comp as $u) {
-    $users[] = $u['uid'];
-  }
-  $competitors = user_load_multiple($users);
-  $form['draw'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
-  foreach ($competitors as $uid => $user) {
-    $form['draw'][$uid] = array(
-      '#type' => 'textfield',
-      '#title' => t('%name draw number', array('%name' => $user->name)),
-      '#description' => t('Draw for this user'),
-      '#size' => 10,
-      '#maxlength' => 2,
-      '#required' => TRUE,
-    ); 
-    if (isset($draw[$uid])) {
-      $form['draw'][$uid]['#default_value'] = $draw[$uid];
+  if ($comp) {
+    foreach ($comp as $u) {
+      $users[] = $u['uid'];
     }
+    $competitors = user_load_multiple($users);
+    $form['draw'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
+    foreach ($competitors as $uid => $user) {
+      $form['draw'][$uid] = array(
+        '#type' => 'textfield',
+        '#title' => t('%name draw number', array('%name' => $user->name)),
+        '#description' => t('Draw for this user'),
+        '#size' => 10,
+        '#maxlength' => 2,
+        '#required' => TRUE,
+      ); 
+      if (isset($draw[$uid])) {
+        $form['draw'][$uid]['#default_value'] = $draw[$uid];
+      }
+    }
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save Draw'),
+    );
   }
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save Draw'),
-  );
+  else {
+      $form['disclaimer'] = array(
+        '#prefix' => '<p>',
+        '#markup' => t('No poets assigned to this tournament. Assign competitors to this tournament on the edit screen.'),
+        '#suffix' => '</p>',
+      );
+  }
   return $form;
 }
 
@@ -103,7 +112,7 @@ function iwps_draw_form_submit($form, &$form_state) {
     $record = new stdClass();
     $record->tid = $nid;
     $record->uid = $uid;
-    $record->drawNum = $val;
+    $record->draw_number = $val;
     drupal_write_record('iwps_draw', $record);
   }
 
