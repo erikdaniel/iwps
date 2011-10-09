@@ -46,13 +46,13 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
   return NULL;
 }
 
-function _get_ranks_in_bout_rotation($bid, $rotation) {
+function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $scores = array();
   $query = new EntityFieldQuery();
 
   $query
     ->entityCondition('entity_type', 'node', '=')
-    ->propertyCondition('type', 'scorecreep_performance', '=')
+    ->propertyCondition('type', 'individual_performance', '=')
     ->fieldCondition('field_rotation', 'value', $rotation)
     ->fieldCondition('field_bout', 'tid', $bid, '=', 0);
    
@@ -70,7 +70,7 @@ function _get_ranks_in_bout_rotation($bid, $rotation) {
   $poets = array();
   foreach ($performances as $perf) {
     //dvm($perf);
-    $poet_id = $perf->field_individual_performer['und'][0]['uid'];
+    $poet_id = $perf->field_individual_performer[$perf->language][0]['uid'];
     $poets[]  = $poet_id;
   }
 
@@ -78,12 +78,14 @@ function _get_ranks_in_bout_rotation($bid, $rotation) {
 
   
   foreach ($performances as $perf) {
+    $poet_id = $perf->field_individual_performer[$perf->language][0]['uid'];
     $scores[] = array(
       'rank' => 0,
-      'performer' => $poets[$poet_id]->name,
+      'performer' => $poet_nodes[$poet_id]->name,
       'rotation' => $perf->field_rotation['und'][0]['value'],
       'score' => $perf->field_score['und'][0]['value'],
       'bout_term' => $perf->field_bout['und'][0]['tid'],
+      'uid' => $poet_id,
     );
   }
 
@@ -91,6 +93,13 @@ function _get_ranks_in_bout_rotation($bid, $rotation) {
   usort($scores, "array_sort_by_score");
   // set ranks
   $scores = _scorecreep_get_performance_ranks($scores);
-
+  if ($type == 'ASSOC') {
+    $assoc = array();
+    for( $i = 0; $i < count($scores); $i++) {
+      //$assoc[$scores[$i]['uid']] = $scores[$i];
+      $assoc[$scores[$i]['uid']] = $scores[$i];
+    }
+    return $assoc;
+  }
   return $scores;
 }

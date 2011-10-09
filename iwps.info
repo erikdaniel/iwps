@@ -3,6 +3,7 @@ description = Score keeping module for IWPS.
 package = PSi
 core = 7.x
 dependencies[] = image
+dependencies[] = scorecreep
 files[] = iwps.test
 files[] = iwps.utils.inc
 files[] = iwps.install

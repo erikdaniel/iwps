@@ -144,8 +144,8 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
   if (is_numeric(arg(4)) && is_numeric(arg(6)) && is_numeric(arg(7))) {
     $performer = user_load(arg(4));
     $node = node_load(arg(6));
-
-    drupal_set_title(t('Add performance for ' . $performer->name));
+    $action = arg(2) == 'add'? 'Add' : 'Edit';
+    drupal_set_title(t($action . ' performance for ' . $performer->name));
 
     $form_state['iwps']['performer'] = $performer;
     $form_state['iwps']['bout'] = $node;
@@ -154,7 +154,6 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
 
     $form['field_individual_performer']['und']['#type'] = 'value';
     $form['field_individual_performer']['und']['#value'] =  $performer->uid;
-
     
     $rotation = arg(7);
 
@@ -291,7 +290,43 @@ function iwps_node_view($node, $view_mode) {
 
       $userobjects = user_load_multiple($users);
 
-      $header = array(t('Performer'), t('Score'));
+      $header = array(t('Performer'), t('Score'), t('Rank*'));
+
+      
+      // Handle Rotation 1 
+      $output = '<h2>Rotation 1</h2>';
+      $scores = array();
+      $rows = array();
+
+      foreach ($userobjects as $uid => $u) {
+        // check if there are existing scores for this user
+        // TODO this could be one call to save DB loads
+        $score = _load_performances_in_bout($bout_id, 1, $u->uid);
+        $tid = $node->field_bout;
+        // push score after this
+        $row = array(
+          'performer' => l($u->name, 'user/' . $u->uid),
+          'score' => count($score) ? $score->field_score[$node->language][0]['value'] : '' ,
+          'rank' => '',
+        );
+        // add rank
+        if ($score) {
+          $ranks = _iwps_get_ranks_in_bout_rotation($bout_id, 1, 'ASSOC');
+          $row['rank'] = $ranks[$u->uid]['rank'];
+        }
+    
+        if (user_access('scores admin')) {
+          if($score) {
+            $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $u->uid . '/bout/' . $node->nid . '/1') ;
+          }
+          else {
+            $row['action'] =  l('Add', 'node/add/individual-performance/performer/' . $u->uid . '/bout/' . $node->nid . '/1');
+          }
+        }
+        $rows[] = $row;
+        // check if user has admin access,
+        // push action column if so
+      }
 
       // check if user has admin access to scores
       // add "action" column if so
@@ -299,29 +334,8 @@ function iwps_node_view($node, $view_mode) {
         $header[] = t('Action');
       }
 
-      $output = '<h2>Rotation 1</h2>';
-      $scores = array();
-      $rows = array();
-      foreach ($userobjects as $uid => $u) {
-        // check if there are existing scores for this user
-        // TODO this could be one call to save DB loads
-        $score = _load_performances_in_bout($bout_id, 1, $u->uid);
-        $scores[] = $score;
-        $tid = $node->field_bout;
-        // push score after this
-        $row = array(
-          'performer' => l($u->name, 'user/' . $u->uid),
-          'score' => count($score) ? $score->field_score[$node->language][0]['value'] : '' ,
-        );
-
-        if (user_access('scores admin')) {
-          $row['action'] =  l('Add', 'node/add/individual-performance/performer/' . $u->uid . '/bout/' . $node->nid . '/1');
-        }
-        $rows[] = $row;
-        // check if user has admin access,
-        // push action column if so
-      }
       $output .= theme('table', array('header' => $header, 'rows' => $rows));
+      $output .= t('<p class="small">* Rank in rotation</p>');
       $node->content['scores'] = array(
         '#markup' => $output,
         '#weight' => 100,
