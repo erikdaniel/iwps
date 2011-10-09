@@ -1,10 +1,41 @@
 <?php
 /**
+ * @file
+ * IWPS Module
+ * Scorekeeping for individual tournaments.
+ * 
+ * TODO: Remove poets from draw when users are 
+ * TODO: Breadcrumbs
+ * removed from tournament.
+ */
+
+
+/**
  * Implement hook_menu().
  */
 
 function iwps_menu() {
   $items = array();
+    $items['node/%node/bouts'] = array(
+    'title' => 'Bouts',
+    'description' => 'Draw for this tournament.',
+    'page callback' => 'iwps_bouts_list',
+    'page arguments' => array(1),
+    'access callback' => array('iwps_bouts_access'),
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+    );
+  $items['node/%node/poets'] = array(
+    'title' => 'Competing Poets',
+    'description' => 'Poets competing in this tournament.',
+    'page callback' => 'iwps_poet_list',
+    'page arguments' => array(1),
+    'access callback' => array('iwps_bouts_access'),
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+    );
   $items['node/%node/draw'] = array(
     'title' => 'Set Draw',
     'description' => 'Draw for this tournament.',
@@ -13,16 +44,21 @@ function iwps_menu() {
     'access callback' => array('iwps_draw_access'),
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
+    'weight' => 11,
     );
-  $items['node/%node/bouts'] = array(
-    'title' => 'Bouts',
-    'description' => 'Draw for this tournament.',
+
+  /*
+  $items['node/%node/scores'] = array(
+    'title' => 'Scores',
+    'description' => 'Scores for this bout.',
     'page callback' => 'iwps_bouts_list',
     'page arguments' => array(1),
     'access callback' => array('iwps_bouts_access'),
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     );
+  */
+
 /*
   $items['node/add/individual-performance/performer/%user/bout/%node'] = array(
     'title' => 'Add IWPS Performance',
@@ -198,6 +234,31 @@ function iwps_bouts_list($node) {
   $output = '';
   return $output;
 }
+/**
+ * Callback function for listing poets in tournament.
+ */
+function iwps_poet_list($node) {
+  drupal_set_title($node->title . ' : Poets');
+  $poets = array();
+  $names = array();
+  $output = '';
+  if (isset($node->field_competing_poets[$node->language])) {
+    foreach ($node->field_competing_poets[$node->language] as  $uid){
+      $poets[] = $uid['uid'];
+    }
+    $users = user_load_multiple($poets);
+    foreach ($users as $uid => $user) {
+      $names[] = $user->name;
+    }
+    if (count($poets) > 0) {
+      $output .= theme('item_list', array('items' => $names, 'title' => t('Competing Poets')));
+    }
+    else {
+      $output .= t('No poets added to roster yet.');
+    }
+  }
+  return $output;
+}
 
 /**
  * Show scores
@@ -208,7 +269,11 @@ function iwps_bouts_list($node) {
  * Implements hook_view().
  */
 function iwps_node_view($node, $view_mode) {
-  if ($view_mode == 'full') {
+  $bout_type = NULL;
+  if (isset($node->field_bout_type[$node->language])) {
+    $bout_type = $node->field_bout_type[$node->language][0]['value'];
+  }
+  if ($view_mode == 'full' && $bout_type == 'individual') {
     // load the schematic
           
      $users = _load_users_by_bout_number($node->nid);   
@@ -240,7 +305,6 @@ function iwps_node_view($node, $view_mode) {
         // check if there are existing scores for this user
         // TODO this could be one call to save DB loads
         $score = _load_performances_in_bout($bout_id, 1, $u->uid);
-        dvm($score);
         $scores[] = $score;
         $tid = $node->field_bout;
         // push score after this
@@ -277,21 +341,6 @@ function iwps_theme() {
       'template' => 'scores',
       ),
     );
-}
-
-/**
- * Returns a node submission form.
- */
-function performance_add_form($bout) {
-  global $user;
-
-  $type = 'scorecreep_performance';
-  $bout_term = taxonomy_term_load($bout);
-  $types = node_type_get_types();
-  $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $type, 'language' => LANGUAGE_NONE);
-  drupal_set_title(t('Add @name to @bout', array('@name' => $types[$type]->name, '@bout' => $bout_term->name)), PASS_THROUGH);
-  $output = drupal_get_form($type . '_node_form', $node, (object)array('bout_id' => $bout_term->tid));
-  return $output;
 }
 
 /**
@@ -335,17 +384,51 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
   return NULL;
 }
 
-function _get_performances_in_bout($bout_id) {
- $query = new EntityFieldQuery();
-  $query
-    ->entityCondition('entity_type', 'node')
-    ->propertyCondition('type', 'individual_performance')
-    ->fieldCondition('field_bout', 'tid', $bout_id, '=', 0);
-  $val = $query->execute();
-  $perfs = array();
-  if (isset($val['node']) ){
-    $perfs = $val['node'];
-  }
-  return $perfs;
-}
+function _get_ranks_in_bout_rotation($bid, $rotation) {
+  $scores = array();
+  $query = new EntityFieldQuery();
 
+  $query
+    ->entityCondition('entity_type', 'node', '=')
+    ->propertyCondition('type', 'scorecreep_performance', '=')
+    ->fieldCondition('field_rotation', 'value', $rotation)
+    ->fieldCondition('field_bout', 'tid', $bid, '=', 0);
+   
+  $result = $query->execute();
+
+  $pids = array();
+
+  if ( array_key_exists('node', $result) ) {
+    foreach($result['node'] as $record) {
+      $pids[] = $record->nid;
+    }
+  }
+
+  $performances = entity_load('node', $pids);   
+  $poets = array();
+  foreach ($performances as $perf) {
+    //dvm($perf);
+    $poet_id = $perf->field_individual_performer['und'][0]['uid'];
+    $poets[]  = $poet_id;
+  }
+
+  $poet_nodes = user_load_multiple($poets);
+
+  
+  foreach ($performances as $perf) {
+    $scores[] = array(
+      'rank' => 0,
+      'performer' => $poets[$poet_id]->name,
+      'rotation' => $perf->field_rotation['und'][0]['value'],
+      'score' => $perf->field_score['und'][0]['value'],
+      'bout_term' => $perf->field_bout['und'][0]['tid'],
+    );
+  }
+
+  // sort by score high to low, DEPENDANCY scorecreep module
+  usort($scores, "array_sort_by_score");
+  // set ranks
+  $scores = _scorecreep_get_performance_ranks($scores);
+
+  return $scores;
+}
