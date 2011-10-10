@@ -47,6 +47,16 @@ function iwps_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 11,
     );
+  $items['node/%node/results'] = array(
+    'title' => 'Bout Results',
+    'description' => 'Final scores and ranks for this bout.',
+    'page callback' => 'iwps_bout_results',
+    'page arguments' => array(1),
+    'access callback' => array('iwps_bout_results_access'),
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 11,
+    );
 
   /*
   $items['node/%node/scores'] = array(
@@ -86,6 +96,17 @@ function iwps_draw_access($node) {
  */
 function iwps_bouts_access($node) {
   return $node->type == 'individual_tournament';  
+}
+
+/**
+ * Callback access method for bout results tab.
+ */
+function iwps_bout_results_access($node) {
+ $bout_type = NULL;
+  if (isset($node->field_bout_type[$node->language])) {
+    $bout_type = $node->field_bout_type[$node->language][0]['value'];
+  }
+  return $node->type == 'scorecreep_bout' && $bout_type == 'individual';  
 }
 
 /**
@@ -321,7 +342,7 @@ function iwps_node_view($node, $view_mode) {
             $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $u->uid . '/bout/' . $node->nid . '/1') ;
           }
           else {
-            $row['action'] =  l('Add', 'node/add/individual-performance/performer/' . $u->uid . '/bout/' . $node->nid . '/1');
+            $row['action'] =  l('Enter', 'node/add/individual-performance/performer/' . $u->uid . '/bout/' . $node->nid . '/1');
           }
         }
         $rows[] = $row;
@@ -334,11 +355,12 @@ function iwps_node_view($node, $view_mode) {
       $output .= theme('table', array('header' => $header, 'rows' => $rows));
       // END of Rotation 1
 
-      // sort ranks 
-      $ranks = _iwps_sort_rotation($ranks, $users);
-      // Handle Rotation 2
+            // Handle Rotation 2
       if (count($ranks) > 0) {
+      // sort ranks 
+        $ranks = _iwps_sort_rotation($ranks, $users);
         $rows = array();
+
         $output .= t('<h2>Rotation 2</h2>');
         foreach ($ranks as $uid => $rank) {
           $uid = $rank['uid'];
@@ -362,7 +384,7 @@ function iwps_node_view($node, $view_mode) {
               $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $uid . '/bout/' . $node->nid . '/2') ;
             }
             else {
-              $row['action'] =  l('Add', 'node/add/individual-performance/performer/' . $uid . '/bout/' . $node->nid . '/2');
+              $row['action'] =  l('Enter', 'node/add/individual-performance/performer/' . $uid . '/bout/' . $node->nid . '/2');
             }
           }
           $rows[] = $row;
@@ -392,3 +414,35 @@ function iwps_theme() {
     );
 }
 
+function iwps_bout_results($node) {
+  $output = t('This bout is not yet complete.');
+  $bout_term_arr = field_get_items('node', $node, 'field_bout');
+  $bout_id = $bout_term_arr[0]['tid'];
+  $ranks_1 = _iwps_get_ranks_in_bout_rotation($bout_id, 1, 'ASSOC');
+  $ranks_2 = _iwps_get_ranks_in_bout_rotation($bout_id, 2, 'ASSOC');
+  
+  if (count($ranks_1) > 0 && count($ranks_1) == count($ranks_2)) {
+    $rows = array();
+    foreach($ranks_1 as $uid => $rank) {
+      $row = array(
+        'performer' => $rank['performer'],
+        'r1rank' => $rank['rank'],
+        'r1score' => $rank['score'],
+      );
+      if (isset($ranks_2)) {
+        $r2 = $ranks_2[$uid];
+        $row['r2rank'] = $r2['rank'];
+        $row['r2score'] = $r2['score'];
+        $row['totalrank'] = $rank['rank'] + $r2['rank'];
+        $row['totalscore'] = $rank['score'] + $r2['score'];
+      }
+      $rows[] = $row;
+    }
+    _iwps_sort_bout_results($rows);
+
+    $header = array(t('Performer'), t('Rank 1'), t('Score 1'), t('Rank 2'), t('Score 2'), t('Total Rank'), t('Total Score'));
+    $output = theme('table', array('header' => $header, 'rows' => $rows));
+  }
+
+  return $output;
+}

@@ -129,3 +129,13 @@ function _iwps_sort_rotation($ranks, $original) {
   array_multisort($r, SORT_ASC, $weight, SORT_DESC, $ranks);
   return $ranks;
 }
+
+function _iwps_sort_bout_results(&$results) {
+  for($i = 0; $i < count($results); $i++) {
+    $totalrank[$i] = $results[$i]['totalrank'];
+    $totalscore[$i] = $results[$i]['totalscore'];
+  }
+  dvm( array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $results));
+  return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $results);
+
+}
