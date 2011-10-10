@@ -88,7 +88,7 @@ function iwps_menu() {
  * Callback access method for draw tab.
  */
 function iwps_draw_access($node) {
-  return $node->type == 'individual_tournament' && user_access('administer content');
+  return $node->type == 'individual_tournament' && user_access('edit any individual_tournament content');
 }
 
 /**
@@ -337,7 +337,7 @@ function iwps_node_view($node, $view_mode) {
 
         // check if user has admin access,
         // push action column if so
-        if (user_access('scores admin')) {
+        if (user_access('create individual_performance content')) {
           if($score) {
             $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $u->uid . '/bout/' . $node->nid . '/1') ;
           }
@@ -349,7 +349,7 @@ function iwps_node_view($node, $view_mode) {
       }
       // check if user has admin access to scores
       // add "action" column if so
-      if (user_access('scores admin')) {
+      if (user_access('create individual_performance content')) {
         $header[] = t('Action');
       }
       $output .= theme('table', array('header' => $header, 'rows' => $rows));
@@ -379,7 +379,7 @@ function iwps_node_view($node, $view_mode) {
 
           // check if user has admin access,
           // push action column if so
-          if (user_access('scores admin')) {
+          if (user_access('create individual_performance content')) {
             if($score) {
               $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $uid . '/bout/' . $node->nid . '/2') ;
             }
