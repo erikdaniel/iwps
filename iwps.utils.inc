@@ -51,6 +51,9 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
   return NULL;
 }
 
+/**
+ * Get all ranks in a rotation. 
+ */
 function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $scores = array();
   $query = new EntityFieldQuery();
@@ -74,7 +77,6 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $performances = entity_load('node', $pids);   
   $poets = array();
   foreach ($performances as $perf) {
-    //dvm($perf);
     $poet_id = $perf->field_individual_performer[$perf->language][0]['uid'];
     $poets[]  = $poet_id;
   }
@@ -135,7 +137,46 @@ function _iwps_sort_bout_results(&$results) {
     $totalrank[$i] = $results[$i]['totalrank'];
     $totalscore[$i] = $results[$i]['totalscore'];
   }
-  dvm( array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $results));
   return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $results);
+}
 
+
+function _iwps_load_bouts_by_terms(&$terms) {
+  $tids = array();
+  foreach ($terms as $tid => $term) {
+    $tids[] =  $tid;
+  }
+  $query = new EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'node', '=')
+    ->propertyCondition('type', 'scorecreep_bout', '=')
+    ->fieldCondition('field_bout', 'tid', (array)$tids, 'IN', 0);
+  $arr = $query->execute();
+  return  $arr['node'];
+}
+
+function _set_allscores($node) {
+  $allscores = array();
+  if (isset($node->field_competing_poets[$node->language])) {
+    foreach ($node->field_competing_poets[$node->language] as  $uid){
+      $u = $uid['uid'];
+      $user = user_load($u);
+      $allscores[$u] = array(
+        'performer' => $user->name,
+        'ranks' => array(),
+        'scores' => array(),
+        'totalrank' => NULL,
+        'totalscore' => NULL,
+      );
+    }
+  }
+  return $allscores;
+}
+
+function _iwps_sort_final_scores(&$allscores) {
+   for($i = 0; $i < count($allscores); $i++) {
+    $totalrank[$i] = $allscores[$i][8];
+    $totalscore[$i] = $allscores[$i][9];
+  }
+  return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
 }

@@ -58,17 +58,16 @@ function iwps_menu() {
     'weight' => 11,
     );
 
-  /*
   $items['node/%node/scores'] = array(
     'title' => 'Scores',
     'description' => 'Scores for this bout.',
-    'page callback' => 'iwps_bouts_list',
+    'page callback' => 'iwps_scores_page',
     'page arguments' => array(1),
     'access callback' => array('iwps_bouts_access'),
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
+    'weight' => 12,
     );
-  */
 
 /*
   $items['node/add/individual-performance/performer/%user/bout/%node'] = array(
@@ -113,6 +112,8 @@ function iwps_bout_results_access($node) {
  * Callback method for draw tab.
  */
 function iwps_draw_form($form, &$form_state, $node) {
+  drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Set Draw');
+
   $form_state['iwps']['node'] = $node;
 
   $num_competitors = $node->field_num_competitors['und'][0]['value'];
@@ -251,7 +252,7 @@ function iwps_draw_form_submit($form, &$form_state) {
  * Sets up an empy page we can drop our block view onto.
  */
 function iwps_bouts_list($node) {
-  drupal_set_title($node->title . ' : Bouts');
+  drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Bouts');
   $output = '';
   return $output;
 }
@@ -259,7 +260,7 @@ function iwps_bouts_list($node) {
  * Callback function for listing poets in tournament.
  */
 function iwps_poet_list($node) {
-  drupal_set_title($node->title . ' : Poets');
+  drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Poets');
   $poets = array();
   $names = array();
   $output = '';
@@ -444,5 +445,66 @@ function iwps_bout_results($node) {
     $output = theme('table', array('header' => $header, 'rows' => $rows));
   }
 
+  return $output;
+}
+/**
+ * Callback function for scores page.
+ */
+function iwps_scores_page($node) {
+  drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Scores');
+  $output = t('There are no scores for this tournament.');
+
+  // get tournament taxonomy term
+  $cat = field_get_items('node', $node, 'field_term_tournament');
+  if ($cat) {
+    $allscores = _set_allscores($node);
+    $terms = taxonomy_get_children($cat[0]['tid']);
+    ksort($terms);// this should keep all the bouts in order
+    // loop through all the bouts
+    foreach($terms as $bid => $term) {
+      // loop through the rotations
+      for ($i = 1; $i < 3; $i++) { 
+        $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
+        // populate the allscores 
+        foreach($rotation as $uid => $ranks) {
+          $allscores[$uid]['ranks'][] = $ranks['rank'];
+          $allscores[$uid]['scores'][] = $ranks['score'];
+        }
+      }
+    }
+    // go through the allscores array setting the rows for the table
+    $header = array(t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"),t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"), t("Total Score"));
+    $rows = array();
+    foreach($allscores as $uid => $score) {
+      // skip performers with less than 4 ranks
+      if (count($score['ranks']) < 4) {
+        continue;
+      }
+      $row = array();
+      $row[] = $score['performer'];
+      $totalrank = 0;
+      $totalscore = 0;
+      $r = $score['ranks'];
+      $s = $score['scores'];
+      for($i = 0; $i < 4; $i++) {
+        $rank = $r[$i];
+        $score =  $s[$i];
+        $totalrank += intval($rank);
+        $totalscore += (double)$score;
+        $row[] = $rank;
+        $row[] = $score;
+      }
+      $row[] = $totalrank;
+      $row[] = $totalscore;
+      $rows[] = $row;
+    }
+    _iwps_sort_final_scores($rows);
+
+    $output = theme('table', array('header' => $header, 'rows' => $rows));
+  }
+  else {
+    $output = t('Tournament category not set, this issue has been logged.');
+    watchdog('IWPS', $node->title . ' does not have a tournament taxonomy.');
+  }
   return $output;
 }
