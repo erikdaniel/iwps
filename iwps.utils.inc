@@ -180,3 +180,26 @@ function _iwps_sort_final_scores(&$allscores) {
   }
   return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
 }
+
+function _iwps_get_all_scores(&$node) {
+  $allscores = array();
+  $cat = field_get_items('node', $node, 'field_term_tournament');
+  if ($cat) {
+    $allscores = _set_allscores($node);
+    $terms = taxonomy_get_children($cat[0]['tid']);
+    ksort($terms);// this should keep all the bouts in order
+    // loop through all the bouts
+    foreach($terms as $bid => $term) {
+      // loop through the rotations
+      for ($i = 1; $i < 3; $i++) { 
+        $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
+        // populate the allscores 
+        foreach($rotation as $uid => $ranks) {
+          $allscores[$uid]['ranks'][] = $ranks['rank'];
+          $allscores[$uid]['scores'][] = $ranks['score'];
+        }
+      }
+    }
+  }
+  return $allscores;
+}

@@ -283,11 +283,6 @@ function iwps_poet_list($node) {
 }
 
 /**
- * Show scores
- * List performances in bout
- * Assign ranks
- */
-/**
  * Implements hook_view().
  */
 function iwps_node_view($node, $view_mode) {
@@ -447,6 +442,7 @@ function iwps_bout_results($node) {
 
   return $output;
 }
+
 /**
  * Callback function for scores page.
  */
@@ -457,21 +453,7 @@ function iwps_scores_page($node) {
   // get tournament taxonomy term
   $cat = field_get_items('node', $node, 'field_term_tournament');
   if ($cat) {
-    $allscores = _set_allscores($node);
-    $terms = taxonomy_get_children($cat[0]['tid']);
-    ksort($terms);// this should keep all the bouts in order
-    // loop through all the bouts
-    foreach($terms as $bid => $term) {
-      // loop through the rotations
-      for ($i = 1; $i < 3; $i++) { 
-        $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
-        // populate the allscores 
-        foreach($rotation as $uid => $ranks) {
-          $allscores[$uid]['ranks'][] = $ranks['rank'];
-          $allscores[$uid]['scores'][] = $ranks['score'];
-        }
-      }
-    }
+    $allscores = _iwps_get_all_scores($node); 
     // go through the allscores array setting the rows for the table
     $header = array(t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"),t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"), t("Total Score"));
     $rows = array();
