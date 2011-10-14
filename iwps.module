@@ -458,8 +458,8 @@ function iwps_scores_page($node) {
     $header = array(t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"),t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"), t("Total Score"));
     $rows = array();
     foreach($allscores as $uid => $score) {
-      // skip performers with less than 4 ranks
-      if (count($score['ranks']) < 4) {
+      // skip performers with less than 2 ranks
+      if (count($score['ranks']) < 2) {
         continue;
       }
       $row = array();
@@ -469,20 +469,22 @@ function iwps_scores_page($node) {
       $r = $score['ranks'];
       $s = $score['scores'];
       for($i = 0; $i < 4; $i++) {
-        $rank = $r[$i];
-        $score =  $s[$i];
+        $rank = isset($r[$i])?$r[$i]:'';
+        $score =  isset($s[$i])?$s[$i]:'';
         $totalrank += intval($rank);
         $totalscore += (double)$score;
         $row[] = $rank;
         $row[] = $score;
       }
+
       $row[] = $totalrank;
       $row[] = $totalscore;
       $rows[] = $row;
     }
-    _iwps_sort_final_scores($rows);
-
-    $output = theme('table', array('header' => $header, 'rows' => $rows));
+    if (count($rows) > 0) {
+      _iwps_sort_final_scores($rows);
+      $output = theme('table', array('header' => $header, 'rows' => $rows));
+    }
   }
   else {
     $output = t('Tournament category not set, this issue has been logged.');

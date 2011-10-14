@@ -98,6 +98,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
 
   // sort by score high to low, DEPENDANCY scorecreep module
   usort($scores, "array_sort_by_score");
+
   // set ranks
   $scores = _scorecreep_get_performance_ranks($scores);
   if ($type == 'ASSOC') {
@@ -178,7 +179,7 @@ function _iwps_sort_final_scores(&$allscores) {
     $totalrank[$i] = $allscores[$i][8];
     $totalscore[$i] = $allscores[$i][9];
   }
-  return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
+  return array_multisort($totalrank, SORT_DESC, $totalscore, SORT_ASC, $allscores);
 }
 
 function _iwps_get_all_scores(&$node) {
