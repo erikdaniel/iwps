@@ -176,10 +176,10 @@ function _set_allscores($node) {
 
 function _iwps_sort_final_scores(&$allscores) {
    for($i = 0; $i < count($allscores); $i++) {
-    $totalrank[$i] = $allscores[$i][8];
-    $totalscore[$i] = $allscores[$i][9];
+    $totalrank[$i] = $allscores[$i][9];
+    $totalscore[$i] = $allscores[$i][10];
   }
-  return array_multisort($totalrank, SORT_DESC, $totalscore, SORT_ASC, $allscores);
+  return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
 }
 
 function _iwps_get_all_scores(&$node) {
