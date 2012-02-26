@@ -24,6 +24,7 @@ function _load_users_by_bout_number($bid) {
 
 /**
  * Load performances in a bout.
+ * TODO make rotation optional
  */
 function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
   $query = new EntityFieldQuery();
@@ -93,6 +94,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
       'score' => $perf->field_score['und'][0]['value'],
       'bout_term' => $perf->field_bout['und'][0]['tid'],
       'uid' => $poet_id,
+      'nid' => $perf->nid,
     );
   }
 
@@ -168,6 +170,7 @@ function _set_allscores($node) {
         'scores' => array(),
         'totalrank' => NULL,
         'totalscore' => NULL,
+        'totalscore' => NULL,
       );
     }
   }
@@ -175,11 +178,29 @@ function _set_allscores($node) {
 }
 
 function _iwps_sort_final_scores(&$allscores) {
-   for($i = 0; $i < count($allscores); $i++) {
+  if (count($allscores) <= 0) {
+    return $allscores;
+  }
+
+  for($i = 0; $i < count($allscores); $i++) {
     $totalrank[$i] = $allscores[$i][9];
     $totalscore[$i] = $allscores[$i][10];
   }
   return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
+}
+
+function _iwps_sort_all_scores($allscores) {
+  if (count($allscores) <= 0) {
+    return $allscores;
+  }
+
+  foreach ($allscores as $uid => $score) {
+    $trank[$uid] = $score['totalrank'];
+    $tscore[$uid] = $score['totalscore'];
+    $allscores[$uid]['uid'] = $uid;
+  }
+  array_multisort($trank, SORT_ASC, $tscore, SORT_DESC, $allscores);
+  return $allscores;
 }
 
 function _iwps_get_all_scores(&$node) {
@@ -191,6 +212,10 @@ function _iwps_get_all_scores(&$node) {
     ksort($terms);// this should keep all the bouts in order
     // loop through all the bouts
     foreach($terms as $bid => $term) {
+      // skip finals bouts
+      if ($term->name === "Finals") {
+        continue;
+      }
       // loop through the rotations
       for ($i = 1; $i < 3; $i++) { 
         $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
@@ -202,5 +227,62 @@ function _iwps_get_all_scores(&$node) {
       }
     }
   }
+  foreach ($allscores as $uid => $scores) {
+    $allscores[$uid]['totalrank'] = array_sum($allscores[$uid]['ranks']);
+    $allscores[$uid]['totalscore'] = array_sum($allscores[$uid]['scores']);
+  }
+  return _iwps_sort_all_scores($allscores);
+}
+
+function _iwps_generate_rows($allscores) {
+  $rows = array();
+  foreach($allscores as $uid => $score) {
+    // skip performers with less than 2 ranks
+    if (count($score['ranks']) < 2) {
+      continue;
+    }
+    $row = array();
+    $row[] = $score['place'];
+    $row[] = $score['performer'];
+    $r = $score['ranks'];
+    $s = $score['scores'];
+    // TODO Should be a variable set on the tourney
+    for($i = 0; $i < 4; $i++) {
+      $row[] = isset($r[$i])?$r[$i]:'';
+      $row[] = isset($s[$i])?$s[$i]:'';
+    }
+    $row[] = $score['totalrank'];
+    $row[] = $score['totalscore'];
+
+    $rows[] = $row;
+  }
+  //_iwps_sort_final_scores($rows);
+  return $rows;
+}
+
+function _iwps_get_final_place($allscores) {
+  $place = 0;
+  $prev_rank = -1;
+  $prev_score = -1;
+  for($i = 0; $i < count($allscores); $i++) {
+    if ($i == 0 || $prev_rank != $allscores[$i]['totalrank'] || ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_score, $allscores[$i]['totalscore']) !== 0)) {
+      $place = $i + 1;
+    }
+    $allscores[$i]['place'] = $place;
+
+    $prev_rank = $allscores[$i]['totalrank'];
+    $prev_score = $allscores[$i]['totalscore'];
+  }
   return $allscores;
 }
+
+function _iwps_get_finalists($allscores, $num, $key = "place") {
+  $finalists = array(); 
+  $finalists = array_slice($allscores, 0, $num);
+  while($finalists[count($finalists) - 1][$key] === $allscores[$num][$key]) {
+    $finalists[] = $allscores[$num++];
+  }
+  return $finalists;
+}
+
+

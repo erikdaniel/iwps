@@ -1,0 +1,1493 @@
+<?php
+/**
+ * @file
+ * Placing tests.
+ */
+
+class IWPSPlacesTestCase extends DrupalUnitTestCase {
+  protected $scores;
+  public static function getInfo() {
+    return array(
+      'name' => 'IWPS Places Tests',
+      'description' => 'Ensure that the competitors are placed correctly in the tournament.',
+      'group' => 'iwps',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('iwps');
+    $this->scores = array(
+        array(
+          'performer' => 'Ed Mabrey',
+          'ranks' => array(
+            1,
+            3,
+            1,
+            1,
+          ),
+          'scores' => array(
+            '29.7',
+            '28.3',
+            '29.2',
+            '29.2',
+          ),
+          'totalrank' => 6,
+          'totalscore' => 116.4,
+          'uid' => 1942,
+        ),
+        array(
+          'performer' => 'Suzi Q',
+          'ranks' => array(
+            2,
+            2,
+            2,
+            1,
+          ),
+          'scores' => array(
+            '28.4',
+            '28.3',
+            '28.1',
+            '28.8',
+          ),
+          'totalrank' => 7,
+          'totalscore' => 113.6,
+          'uid' => 1598,
+        ),
+        array(
+          'performer' => 'Chris August',
+          'ranks' => array(
+            4,
+            4,
+            1,
+            2,
+          ),
+          'scores' => array(
+            '28.4',
+            '29.1',
+            '28.4',
+            '28.3',
+          ),
+          'totalrank' => 11,
+          'totalscore' => 114.2,
+          'uid' => 1459,
+        ),
+        array(
+          'performer' => 'Storm Thomas',
+          'ranks' => array(
+            3,
+            1,
+            7,
+            1,
+          ),
+          'scores' => array(
+            '29.5',
+            '29.7',
+            '28.2',
+            '30.0',
+          ),
+          'totalrank' => 12,
+          'totalscore' => 117.4,
+          'uid' => 1915,
+        ),
+        array(
+          'performer' => 'Kait Rokowski',
+          'ranks' => array(
+            3,
+            2,
+            5,
+            2,
+          ),
+          'scores' => array(
+            '29.4',
+            '29.4',
+            '28.0',
+            '29.1',
+          ),
+          'totalrank' => 12,
+          'totalscore' => 115.9,
+          'uid' => 1060,
+        ),
+        array(
+          'performer' => 'Danez Smith',
+          'ranks' => array(
+            2,
+            9,
+            1,
+            1,
+          ),
+          'scores' => array(
+            '29.0',
+            '28.7',
+            '29.8',
+            '30.0',
+          ),
+          'totalrank' => 13,
+          'totalscore' => 117.5,
+          'uid' => 890,
+        ),
+        array(
+          'performer' => 'Alvin Lau',
+          'ranks' => array(
+            4,
+            5,
+            1,
+            3,
+          ),
+          'scores' => array(
+            '28.0',
+            '28.9',
+            '29.4',
+            '29.1',
+          ),
+          'totalrank' => 13,
+          'totalscore' => 115.4,
+          'uid' => 1935,
+        ),
+        array(
+          'performer' => 'Brian Omni Dillon',
+          'ranks' => array(
+            1,
+            5,
+            2,
+            6,
+          ),
+          'scores' => array(
+            '28.5',
+            '27.8',
+            '28.5',
+            '28.6',
+          ),
+          'totalrank' => 14,
+          'totalscore' => 113.4,
+          'uid' => 1032,
+        ),
+        array(
+          'performer' => 'Tatyana Brown',
+          'ranks' => array(
+            5,
+            3,
+            4,
+            3,
+          ),
+          'scores' => array(
+            '27.8',
+            '29.3',
+            '29.1',
+            '29.5',
+          ),
+          'totalrank' => 15,
+          'totalscore' => 115.7,
+          'uid' => 934,
+        ),
+        array(
+          'performer' => 'Joanna Hoffman',
+          'ranks' => array(
+            4,
+            4,
+            6,
+            2,
+          ),
+          'scores' => array(
+            '27.9',
+            '27.7',
+            '28.3',
+            '29.4',
+          ),
+          'totalrank' => 16,
+          'totalscore' => 113.3,
+          'uid' => 1746,
+        ),
+        array(
+          'performer' => 'Michael Lee',
+          'ranks' => array(
+            4,
+            2,
+            2,
+            9,
+          ),
+          'scores' => array(
+            '29.4',
+            '28.9',
+            '28.5',
+            '28.2',
+          ),
+          'totalrank' => 17,
+          'totalscore' => 115,
+          'uid' => 1711,
+        ),
+        array(
+          'performer' => 'Jesse Parent',
+          'ranks' => array(
+            2,
+            8,
+            6,
+            1,
+          ),
+          'scores' => array(
+            '28.1',
+            '27.1',
+            '28.3',
+            '29.9',
+          ),
+          'totalrank' => 17,
+          'totalscore' => 113.4,
+          'uid' => 728,
+        ),
+        array(
+          'performer' => 'Robyn Bateman',
+          'ranks' => array(
+            8,
+            3,
+            4,
+            2,
+          ),
+          'scores' => array(
+            '27.4',
+            '28.3',
+            '28.4',
+            '29.3',
+          ),
+          'totalrank' => 17,
+          'totalscore' => 113.4,
+          'uid' => 1924,
+        ),
+        array(
+          'performer' => 'Emily Rose',
+          'ranks' => array(
+            8,
+            3,
+            1,
+            5,
+          ),
+          'scores' => array(
+            '26.3',
+            '28.1',
+            '29.4',
+            '28.8',
+          ),
+          'totalrank' => 17,
+          'totalscore' => 112.6,
+          'uid' => 893,
+        ),
+        array(
+          'performer' => 'Bobby Lefebre',
+          'ranks' => array(
+            4,
+            2,
+            4,
+            7,
+          ),
+          'scores' => array(
+            '28.0',
+            '28.9',
+            '27.3',
+            '27.7',
+          ),
+          'totalrank' => 17,
+          'totalscore' => 111.9,
+          'uid' => 1929,
+        ),
+        array(
+          'performer' => 'Joseph LMS Green',
+          'ranks' => array(
+            1,
+            3,
+            6,
+            8,
+          ),
+          'scores' => array(
+            '29.6',
+            '28.3',
+            '27.9',
+            '28.4',
+          ),
+          'totalrank' => 18,
+          'totalscore' => 114.2,
+          'uid' => 1458,
+        ),
+        array(
+          'performer' => 'Camonghne Felix',
+          'ranks' => array(
+            8,
+            7,
+            2,
+            2,
+          ),
+          'scores' => array(
+            '28.7',
+            '28.0',
+            '29.7',
+            '29.9',
+          ),
+          'totalrank' => 19,
+          'totalscore' => 116.3,
+          'uid' => 1925,
+        ),
+        array(
+          'performer' => 'Xero Skidmore',
+          'ranks' => array(
+            8,
+            1,
+            3,
+            7,
+          ),
+          'scores' => array(
+            '26.9',
+            '29.3',
+            '29.3',
+            '29.5',
+          ),
+          'totalrank' => 19,
+          'totalscore' => 115,
+          'uid' => 755,
+        ),
+        array(
+          'performer' => 'Jamaal VS May',
+          'ranks' => array(
+            5,
+            5,
+            2,
+            7,
+          ),
+          'scores' => array(
+            '27.8',
+            '28.9',
+            '28.9',
+            '28.8',
+          ),
+          'totalrank' => 19,
+          'totalscore' => 114.4,
+          'uid' => 791,
+        ),
+        array(
+          'performer' => 'Megan Falley',
+          'ranks' => array(
+            6,
+            3,
+            5,
+            5,
+          ),
+          'scores' => array(
+            '27.9',
+            '28.3',
+            '28.4',
+            '29.2',
+          ),
+          'totalrank' => 19,
+          'totalscore' => 113.8,
+          'uid' => 867,
+        ),
+        array(
+          'performer' => 'Olivia Gatwood',
+          'ranks' => array(
+            1,
+            6,
+            8,
+            4,
+          ),
+          'scores' => array(
+            '28.6',
+            '27.3',
+            '27.4',
+            '28.9',
+          ),
+          'totalrank' => 19,
+          'totalscore' => 112.2,
+          'uid' => 1436,
+        ),
+        array(
+          'performer' => 'Sam Cook',
+          'ranks' => array(
+            5,
+            1,
+            3,
+            11,
+          ),
+          'scores' => array(
+            '28.2',
+            '29.3',
+            '29.6',
+            '28.3',
+          ),
+          'totalrank' => 20,
+          'totalscore' => 115.4,
+          'uid' => 1004,
+        ),
+        array(
+          'performer' => 'Houston',
+          'ranks' => array(
+            11,
+            5,
+            3,
+            1,
+          ),
+          'scores' => array(
+            '27.9',
+            '28.2',
+            '28.8',
+            '29.5',
+          ),
+          'totalrank' => 20,
+          'totalscore' => 114.4,
+          'uid' => 801,
+        ),
+        array(
+          'performer' => 'Damien Flores',
+          'ranks' => array(
+            6,
+            6,
+            4,
+            4,
+          ),
+          'scores' => array(
+            '27.5',
+            '27.7',
+            '28.7',
+            '29.7',
+          ),
+          'totalrank' => 20,
+          'totalscore' => 113.6,
+          'uid' => 734,
+        ),
+        array(
+          'performer' => 'Queen D',
+          'ranks' => array(
+            2,
+            1,
+            13,
+            4,
+          ),
+          'scores' => array(
+            '29.9',
+            '29.5',
+            '24.6',
+            '28.9',
+          ),
+          'totalrank' => 20,
+          'totalscore' => 112.9,
+          'uid' => 936,
+        ),
+        array(
+          'performer' => 'Ayinde Russell',
+          'ranks' => array(
+            3,
+            4,
+            10,
+            3,
+          ),
+          'scores' => array(
+            '28.1',
+            '27.7',
+            '26.5',
+            '28.1',
+          ),
+          'totalrank' => 20,
+          'totalscore' => 110.4,
+          'uid' => 974,
+        ),
+        array(
+          'performer' => 'April Ranger',
+          'ranks' => array(
+            4,
+            5,
+            1,
+            11,
+          ),
+          'scores' => array(
+            '28.4',
+            '28.9',
+            '29.8',
+            '28.5',
+          ),
+          'totalrank' => 21,
+          'totalscore' => 115.6,
+          'uid' => 725,
+        ),
+        array(
+          'performer' => 'Ryan McClellan',
+          'ranks' => array(
+            8,
+            3,
+            1,
+            9,
+          ),
+          'scores' => array(
+            '27.5',
+            '29.3',
+            '29.5',
+            '28.7',
+          ),
+          'totalrank' => 21,
+          'totalscore' => 115,
+          'uid' => 1688,
+        ),
+        array(
+          'performer' => 'Sam Sax',
+          'ranks' => array(
+            6,
+            9,
+            1,
+            6,
+          ),
+          'scores' => array(
+            '28.1',
+            '28.7',
+            '29.4',
+            '28.5',
+          ),
+          'totalrank' => 22,
+          'totalscore' => 114.7,
+          'uid' => 935,
+        ),
+        array(
+          'performer' => 'Christopher Michael',
+          'ranks' => array(
+            7,
+            8,
+            4,
+            3,
+          ),
+          'scores' => array(
+            '28.8',
+            '27.9',
+            '28.4',
+            '29.1',
+          ),
+          'totalrank' => 22,
+          'totalscore' => 114.2,
+          'uid' => 1054,
+        ),
+        array(
+          'performer' => 'Jack McCarthy',
+          'ranks' => array(
+            10,
+            1,
+            7,
+            4,
+          ),
+          'scores' => array(
+            '25.5',
+            '28.9',
+            '28.2',
+            '29.4',
+          ),
+          'totalrank' => 22,
+          'totalscore' => 112,
+          'uid' => 1918,
+        ),
+        array(
+          'performer' => 'Rachel McKibbens',
+          'ranks' => array(
+            6,
+            3,
+            8,
+            5,
+          ),
+          'scores' => array(
+            '29.0',
+            '28.3',
+            '26.7',
+            '28.0',
+          ),
+          'totalrank' => 22,
+          'totalscore' => 112,
+          'uid' => 1472,
+        ),
+        array(
+          'performer' => 'Miles Walser',
+          'ranks' => array(
+            1,
+            7,
+            9,
+            6,
+          ),
+          'scores' => array(
+            '30.0',
+            '28.8',
+            '28.0',
+            '28.9',
+          ),
+          'totalrank' => 23,
+          'totalscore' => 115.7,
+          'uid' => 1590,
+        ),
+        array(
+          'performer' => 'Scott Beal',
+          'ranks' => array(
+            9,
+            3,
+            9,
+            2,
+          ),
+          'scores' => array(
+            '26.9',
+            '29.3',
+            '28.0',
+            '29.4',
+          ),
+          'totalrank' => 23,
+          'totalscore' => 113.6,
+          'uid' => 1932,
+        ),
+        array(
+          'performer' => 'CB',
+          'ranks' => array(
+            3,
+            2,
+            9,
+            9,
+          ),
+          'scores' => array(
+            '28.4',
+            '29.4',
+            '26.8',
+            '27.7',
+          ),
+          'totalrank' => 23,
+          'totalscore' => 112.3,
+          'uid' => 1931,
+        ),
+        array(
+          'performer' => 'Josh Merchant',
+          'ranks' => array(
+            5,
+            12,
+            6,
+            1,
+          ),
+          'scores' => array(
+            '27.8',
+            '26.7',
+            '28.6',
+            '30.0',
+          ),
+          'totalrank' => 24,
+          'totalscore' => 113.1,
+          'uid' => 1922,
+        ),
+        array(
+          'performer' => 'Nick Macedo',
+          'ranks' => array(
+            7,
+            3,
+            7,
+            7,
+          ),
+          'scores' => array(
+            '27.2',
+            '28.1',
+            '28.2',
+            '28.8',
+          ),
+          'totalrank' => 24,
+          'totalscore' => 112.3,
+          'uid' => 849,
+        ),
+        array(
+          'performer' => 'Danny Strack',
+          'ranks' => array(
+            1,
+            7,
+            11,
+            6,
+          ),
+          'scores' => array(
+            '29.4',
+            '28.8',
+            '26.4',
+            '28.6',
+          ),
+          'totalrank' => 25,
+          'totalscore' => 113.2,
+          'uid' => 838,
+        ),
+        array(
+          'performer' => 'Bran Do',
+          'ranks' => array(
+            2,
+            12,
+            6,
+            6,
+          ),
+          'scores' => array(
+            '28.6',
+            '27.3',
+            '26.8',
+            '27.8',
+          ),
+          'totalrank' => 26,
+          'totalscore' => 110.5,
+          'uid' => 1705,
+        ),
+        array(
+          'performer' => 'Gage Wallace',
+          'ranks' => array(
+            10,
+            2,
+            4,
+            11,
+          ),
+          'scores' => array(
+            '27.1',
+            '28.9',
+            '28.7',
+            '28.6',
+          ),
+          'totalrank' => 27,
+          'totalscore' => 113.3,
+          'uid' => 1917,
+        ),
+        array(
+          'performer' => 'The Klute',
+          'ranks' => array(
+            12,
+            11,
+            2,
+            2,
+          ),
+          'scores' => array(
+            '23.6',
+            '25.9',
+            '28.5',
+            '29.1',
+          ),
+          'totalrank' => 27,
+          'totalscore' => 107.1,
+          'uid' => 898,
+        ),
+        array(
+          'performer' => 'Samuel Eddie',
+          'ranks' => array(
+            11,
+            7,
+            1,
+            9,
+          ),
+          'scores' => array(
+            '24.0',
+            '27.1',
+            '29.8',
+            '28.5',
+          ),
+          'totalrank' => 28,
+          'totalscore' => 109.4,
+          'uid' => 1927,
+        ),
+        array(
+          'performer' => 'Aaron Samuels',
+          'ranks' => array(
+            5,
+            9,
+            9,
+            6,
+          ),
+          'scores' => array(
+            '27.8',
+            '28.7',
+            '28.1',
+            '29.6',
+          ),
+          'totalrank' => 29,
+          'totalscore' => 114.2,
+          'uid' => 1778,
+        ),
+        array(
+          'performer' => 'Jonathan Brown',
+          'ranks' => array(
+            2,
+            6,
+            8,
+            13,
+          ),
+          'scores' => array(
+            '29.6',
+            '28.1',
+            '27.4',
+            '26.2',
+          ),
+          'totalrank' => 29,
+          'totalscore' => 111.3,
+          'uid' => 1926,
+        ),
+        array(
+          'performer' => 'Sara Brickman',
+          'ranks' => array(
+            4,
+            8,
+            11,
+            6,
+          ),
+          'scores' => array(
+            '28.4',
+            '28.1',
+            '25.9',
+            '28.5',
+          ),
+          'totalrank' => 29,
+          'totalscore' => 110.9,
+          'uid' => 1683,
+        ),
+        array(
+          'performer' => 'Greg Bee',
+          'ranks' => array(
+            2,
+            13,
+            7,
+            8,
+          ),
+          'scores' => array(
+            '28.6',
+            '27.0',
+            '27.7',
+            '27.9',
+          ),
+          'totalrank' => 30,
+          'totalscore' => 111.2,
+          'uid' => 1951,
+        ),
+        array(
+          'performer' => 'Mike Mlekoday',
+          'ranks' => array(
+            2,
+            10,
+            7,
+            11,
+          ),
+          'scores' => array(
+            '28.1',
+            '27.0',
+            '27.7',
+            '27.3',
+          ),
+          'totalrank' => 30,
+          'totalscore' => 110.1,
+          'uid' => 1715,
+        ),
+        array(
+          'performer' => 'Gus Wood',
+          'ranks' => array(
+            11,
+            9,
+            7,
+            4,
+          ),
+          'scores' => array(
+            '26.3',
+            '28.7',
+            '28.2',
+            '29.4',
+          ),
+          'totalrank' => 31,
+          'totalscore' => 112.6,
+          'uid' => 1442,
+        ),
+        array(
+          'performer' => 'Trevor Byrne-Smith',
+          'ranks' => array(
+            9,
+            9,
+            5,
+            8,
+          ),
+          'scores' => array(
+            '27.2',
+            '28.0',
+            '28.4',
+            '29.0',
+          ),
+          'totalrank' => 31,
+          'totalscore' => 112.6,
+          'uid' => 819,
+        ),
+        array(
+          'performer' => 'Vernell Bristow',
+          'ranks' => array(
+            12,
+            13,
+            3,
+            3,
+          ),
+          'scores' => array(
+            '26.9',
+            '27.3',
+            '27.5',
+            '28.1',
+          ),
+          'totalrank' => 31,
+          'totalscore' => 109.8,
+          'uid' => 1045,
+        ),
+        array(
+          'performer' => 'Billy Tuggle',
+          'ranks' => array(
+            7,
+            3,
+            9,
+            12,
+          ),
+          'scores' => array(
+            '27.7',
+            '28.3',
+            '26.6',
+            '26.2',
+          ),
+          'totalrank' => 31,
+          'totalscore' => 108.8,
+          'uid' => 895,
+        ),
+        array(
+          'performer' => 'Jerri Hardesty',
+          'ranks' => array(
+            10,
+            9,
+            11,
+            2,
+          ),
+          'scores' => array(
+            '26.7',
+            '28.7',
+            '27.4',
+            '29.4',
+          ),
+          'totalrank' => 32,
+          'totalscore' => 112.2,
+          'uid' => 1457,
+        ),
+        array(
+          'performer' => 'CP Maze',
+          'ranks' => array(
+            12,
+            7,
+            5,
+            8,
+          ),
+          'scores' => array(
+            '26.8',
+            '28.8',
+            '27.2',
+            '27.5',
+          ),
+          'totalrank' => 32,
+          'totalscore' => 110.3,
+          'uid' => 1693,
+        ),
+        array(
+          'performer' => 'Ellie White',
+          'ranks' => array(
+            9,
+            1,
+            12,
+            11,
+          ),
+          'scores' => array(
+            '26.9',
+            '29.5',
+            '25.4',
+            '26.9',
+          ),
+          'totalrank' => 33,
+          'totalscore' => 108.7,
+          'uid' => 1944,
+        ),
+        array(
+          'performer' => 'David Lee Morgan',
+          'ranks' => array(
+            13,
+            5,
+            6,
+            10,
+          ),
+          'scores' => array(
+            '25.0',
+            '28.9',
+            '28.3',
+            '28.7',
+          ),
+          'totalrank' => 34,
+          'totalscore' => 110.9,
+          'uid' => 1933,
+        ),
+        array(
+          'performer' => 'Tara Brenner',
+          'ranks' => array(
+            9,
+            12,
+            10,
+            4,
+          ),
+          'scores' => array(
+            '25.7',
+            '25.7',
+            '28.0',
+            '29.7',
+          ),
+          'totalrank' => 35,
+          'totalscore' => 109.1,
+          'uid' => 744,
+        ),
+        array(
+          'performer' => 'Krista Mosca',
+          'ranks' => array(
+            6,
+            7,
+            13,
+            9,
+          ),
+          'scores' => array(
+            '26.7',
+            '27.1',
+            '26.5',
+            '28.7',
+          ),
+          'totalrank' => 35,
+          'totalscore' => 109,
+          'uid' => 962,
+        ),
+        array(
+          'performer' => 'Ryk McIntyre',
+          'ranks' => array(
+            8,
+            9,
+            9,
+            10,
+          ),
+          'scores' => array(
+            '27.5',
+            '28.7',
+            '27.1',
+            '27.9',
+          ),
+          'totalrank' => 36,
+          'totalscore' => 111.2,
+          'uid' => 1941,
+        ),
+        array(
+          'performer' => 'Jacob Rakovan',
+          'ranks' => array(
+            12,
+            7,
+            11,
+            6,
+          ),
+          'scores' => array(
+            '26.2',
+            '28.8',
+            '26.8',
+            '29.3',
+          ),
+          'totalrank' => 36,
+          'totalscore' => 111.1,
+          'uid' => 1936,
+        ),
+        array(
+          'performer' => 'Zachary Karon',
+          'ranks' => array(
+            7,
+            9,
+            13,
+            7,
+          ),
+          'scores' => array(
+            '26.6',
+            '26.9',
+            '26.6',
+            '29.1',
+          ),
+          'totalrank' => 36,
+          'totalscore' => 109.2,
+          'uid' => 1950,
+        ),
+        array(
+          'performer' => 'Dasan Ahanu',
+          'ranks' => array(
+            11,
+            7,
+            10,
+            8,
+          ),
+          'scores' => array(
+            '26.2',
+            '27.5',
+            '26.5',
+            '27.5',
+          ),
+          'totalrank' => 36,
+          'totalscore' => 107.7,
+          'uid' => 745,
+        ),
+        array(
+          'performer' => 'Sean Patrick Mulroy',
+          'ranks' => array(
+            10,
+            4,
+            11,
+            11,
+          ),
+          'scores' => array(
+            '26.3',
+            '28.0',
+            '25.9',
+            '27.0',
+          ),
+          'totalrank' => 36,
+          'totalscore' => 107.2,
+          'uid' => 871,
+        ),
+        array(
+          'performer' => 'DeAnn Emett',
+          'ranks' => array(
+            10,
+            8,
+            10,
+            9,
+          ),
+          'scores' => array(
+            '28.2',
+            '27.9',
+            '27.2',
+            '28.5',
+          ),
+          'totalrank' => 37,
+          'totalscore' => 111.8,
+          'uid' => 1939,
+        ),
+        array(
+          'performer' => 'Zak',
+          'ranks' => array(
+            13,
+            11,
+            10,
+            3,
+          ),
+          'scores' => array(
+            '26.0',
+            '27.4',
+            '28.0',
+            '29.8',
+          ),
+          'totalrank' => 37,
+          'totalscore' => 111.2,
+          'uid' => 1481,
+        ),
+        array(
+          'performer' => 'Abe Becker',
+          'ranks' => array(
+            9,
+            8,
+            8,
+            12,
+          ),
+          'scores' => array(
+            '26.7',
+            '27.1',
+            '28.1',
+            '28.5',
+          ),
+          'totalrank' => 37,
+          'totalscore' => 110.4,
+          'uid' => 1923,
+        ),
+        array(
+          'performer' => 'Leah Gould',
+          'ranks' => array(
+            9,
+            12,
+            6,
+            10,
+          ),
+          'scores' => array(
+            '28.4',
+            '27.5',
+            '26.8',
+            '27.4',
+          ),
+          'totalrank' => 37,
+          'totalscore' => 110.1,
+          'uid' => 1631,
+        ),
+        array(
+          'performer' => 'Chris Gilpin',
+          'ranks' => array(
+            12,
+            3,
+            9,
+            13,
+          ),
+          'scores' => array(
+            '26.9',
+            '28.3',
+            '27.6',
+            '27.1',
+          ),
+          'totalrank' => 37,
+          'totalscore' => 109.9,
+          'uid' => 1920,
+        ),
+        array(
+          'performer' => 'Dave Stanley',
+          'ranks' => array(
+            13,
+            10,
+            7,
+            9,
+          ),
+          'scores' => array(
+            '26.8',
+            '27.8',
+            '28.2',
+            '28.8',
+          ),
+          'totalrank' => 39,
+          'totalscore' => 111.6,
+          'uid' => 1928,
+        ),
+        array(
+          'performer' => 'Laura Lamb Brown-Lavoie',
+          'ranks' => array(
+            9,
+            12,
+            11,
+            7,
+          ),
+          'scores' => array(
+            '26.9',
+            '28.1',
+            '26.8',
+            '29.1',
+          ),
+          'totalrank' => 39,
+          'totalscore' => 110.9,
+          'uid' => 1649,
+        ),
+        array(
+          'performer' => 'Michelle Nimmo',
+          'ranks' => array(
+            12,
+            11,
+            5,
+            11,
+          ),
+          'scores' => array(
+            '26.0',
+            '26.9',
+            '28.7',
+            '28.3',
+          ),
+          'totalrank' => 39,
+          'totalscore' => 109.9,
+          'uid' => 1919,
+        ),
+        array(
+          'performer' => 'Anjee-O',
+          'ranks' => array(
+            7,
+            13,
+            10,
+            10,
+          ),
+          'scores' => array(
+            '27.7',
+            '27.7',
+            '26.0',
+            '27.4',
+          ),
+          'totalrank' => 40,
+          'totalscore' => 108.8,
+          'uid' => 1766,
+        ),
+        array(
+          'performer' => 'Robert Gibbs',
+          'ranks' => array(
+            5,
+            10,
+            13,
+            12,
+          ),
+          'scores' => array(
+            '27.1',
+            '26.4',
+            '25.4',
+            '26.6',
+          ),
+          'totalrank' => 40,
+          'totalscore' => 105.5,
+          'uid' => 1949,
+        ),
+        array(
+          'performer' => 'Angelique Palmer',
+          'ranks' => array(
+            5,
+            11,
+            12,
+            13,
+          ),
+          'scores' => array(
+            '29.3',
+            '27.6',
+            '27.2',
+            '27.9',
+          ),
+          'totalrank' => 41,
+          'totalscore' => 112,
+          'uid' => 1943,
+        ),
+        array(
+          'performer' => 'Andrew Procyk',
+          'ranks' => array(
+            11,
+            10,
+            10,
+            12,
+          ),
+          'scores' => array(
+            '27.0',
+            '27.8',
+            '26.6',
+            '27.1',
+          ),
+          'totalrank' => 43,
+          'totalscore' => 108.5,
+          'uid' => 1934,
+        ),
+        array(
+          'performer' => 'Josh Ballard',
+          'ranks' => array(
+            9,
+            12,
+            13,
+            13,
+          ),
+          'scores' => array(
+            '26.8',
+            '28.1',
+            '24.1',
+            '26.0',
+          ),
+          'totalrank' => 47,
+          'totalscore' => 105,
+          'uid' => 1580,
+        ),
+        array(
+          'performer' => 'William Bradford',
+          'ranks' => array(
+            13,
+            13,
+            12,
+            11,
+          ),
+          'scores' => array(
+            '25.9',
+            '26.4',
+            '23.7',
+            '28.5',
+          ),
+          'totalrank' => 49,
+          'totalscore' => 104.5,
+          'uid' => 1921,
+        ),
+        array(
+          'performer' => 'Jim Iholts',
+          'ranks' => array(
+            13,
+            13,
+            12,
+            13,
+          ),
+          'scores' => array(
+            '22.3',
+            '27.9',
+            '25.6',
+            '26.0',
+          ),
+          'totalrank' => 51,
+          'totalscore' => 101.8,
+          'uid' => 1947,
+        ),
+        array(
+          'performer' => 'George David Miller',
+          'ranks' => array(
+            13,
+            13,
+            13,
+            13,
+          ),
+          'scores' => array(
+            '22.7',
+            '25.3',
+            '0.0',
+            '0.0',
+          ),
+          'totalrank' => 52,
+          'totalscore' => 48,
+          'uid' => 1940,
+        ),
+      ); 
+  }
+
+
+  function testPlacesExists() {
+    $s = array(
+       array(
+        'uid' => 22,
+        'totalscore' => 100,
+        'totalrank' => 2,
+        ),
+       array(
+        'uid' => 33,
+        'totalscore' => 90,
+        'totalrank' => 3,
+      ));
+    $s = _iwps_get_final_place($s);
+    $this->assertEqual($s[0]['place'], 1);
+    $this->assertEqual($s[0]['uid'], 22);
+  }
+
+  function testAllScoresPlaces() {
+    $allscores = _iwps_get_final_place($this->scores);
+    
+    $this->assertEqual($allscores[0]['uid'], 1942);
+    $this->assertTrue($allscores[0]['totalrank'] < $allscores[1]['totalrank']);
+
+  }
+
+  function testTiedRanksBreakToTotalScore() {
+    $allscores = _iwps_get_final_place($this->scores);
+    $this->assertEqual($allscores[3]['totalrank'], $allscores[4]['totalrank']);
+    $this->assertTrue($allscores[3]['totalscore'] > $allscores[4]['totalscore']);
+    $this->assertTrue($allscores[3]['place'] < $allscores[4]['place']);
+  }
+
+  function testTiedRankAndScoreTiePlace() {
+    $allscores = _iwps_get_final_place($this->scores);
+    $player1 = $allscores[11];
+    $player2 = $allscores[12];
+    $player3 = $allscores[13];
+
+    $this->assertEqual($player1['totalrank'], $player2['totalrank']);
+    $this->assertEqual($player1['totalscore'], $player2['totalscore']);
+    $this->assertEqual($player1['place'], $player2['place']);
+    $this->assertTrue($player2['place'] < $player3['place']);
+  }
+
+  function testSetFinalists() {
+    $this->scores[12]['totalscore'] = 113.5;
+    $allscores = _iwps_get_final_place($this->scores);
+    $finalists = _iwps_get_finalists($allscores, 12);
+    $this->assertEqual(count($finalists), 12);
+  }
+ 
+  function testSetFinalistsWithTieFor12th() {
+    $allscores = _iwps_get_final_place($this->scores);
+    $finalists = _iwps_get_finalists($allscores, 12);
+    $this->assertEqual(count($finalists), 13);
+  }
+
+  function testSetFinalistsWithThreeWayTieFor12th() {
+    $this->scores[13]['totalrank'] = 17;
+    $this->scores[13]['totalscore'] = 113.4;
+    $allscores = _iwps_get_final_place($this->scores);
+    $finalists = _iwps_get_finalists($allscores, 12);
+    $this->assertEqual(count($finalists), 14);
+  }
+
+}
