@@ -41,7 +41,7 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
   $n = NULL;
   $perfs = array();
   if ($result) {
-    foreach( $result['node'] as $nid => $node) {
+    foreach ( $result['node'] as $nid => $node) {
       $n = $nid;
       $perfs[] = $nid; 
     }
@@ -70,7 +70,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $pids = array();
 
   if ( array_key_exists('node', $result) ) {
-    foreach($result['node'] as $record) {
+    foreach ($result['node'] as $record) {
       $pids[] = $record->nid;
     }
   }
@@ -105,7 +105,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $scores = _scorecreep_get_performance_ranks($scores);
   if ($type == 'ASSOC') {
     $assoc = array();
-    for( $i = 0; $i < count($scores); $i++) {
+    for ( $i = 0; $i < count($scores); $i++) {
       $assoc[$scores[$i]['uid']] = $scores[$i];
     }
     return $assoc;
@@ -126,7 +126,7 @@ function _iwps_sort_rotation($ranks, $original) {
   $orig_set = array();
   $rank_set = array();
   $count = 0;
-  foreach($ranks as $uid => $rank) {
+  foreach ($ranks as $uid => $rank) {
     $rank['weight'] = $original[$uid]->iwps_weight;
     $r[$uid] = $rank['rank'];
     $weight[$uid] = $original[$uid]->iwps_weight;
@@ -136,7 +136,7 @@ function _iwps_sort_rotation($ranks, $original) {
 }
 
 function _iwps_sort_bout_results(&$results) {
-  for($i = 0; $i < count($results); $i++) {
+  for ($i = 0; $i < count($results); $i++) {
     $totalrank[$i] = $results[$i]['totalrank'];
     $totalscore[$i] = $results[$i]['totalscore'];
   }
@@ -161,7 +161,7 @@ function _iwps_load_bouts_by_terms(&$terms) {
 function _set_allscores($node) {
   $allscores = array();
   if (isset($node->field_competing_poets[$node->language])) {
-    foreach ($node->field_competing_poets[$node->language] as  $uid){
+    foreach ($node->field_competing_poets[$node->language] as  $uid) {
       $u = $uid['uid'];
       $user = user_load($u);
       $allscores[$u] = array(
@@ -182,7 +182,7 @@ function _iwps_sort_final_scores(&$allscores) {
     return $allscores;
   }
 
-  for($i = 0; $i < count($allscores); $i++) {
+  for ($i = 0; $i < count($allscores); $i++) {
     $totalrank[$i] = $allscores[$i][9];
     $totalscore[$i] = $allscores[$i][10];
   }
@@ -211,7 +211,7 @@ function _iwps_get_all_scores(&$node) {
     $terms = taxonomy_get_children($cat[0]['tid']);
     ksort($terms);// this should keep all the bouts in order
     // loop through all the bouts
-    foreach($terms as $bid => $term) {
+    foreach ($terms as $bid => $term) {
       // skip finals bouts
       if ($term->name === "Finals") {
         continue;
@@ -220,7 +220,7 @@ function _iwps_get_all_scores(&$node) {
       for ($i = 1; $i < 3; $i++) { 
         $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
         // populate the allscores 
-        foreach($rotation as $uid => $ranks) {
+        foreach ($rotation as $uid => $ranks) {
           $allscores[$uid]['ranks'][] = $ranks['rank'];
           $allscores[$uid]['scores'][] = $ranks['score'];
         }
@@ -236,7 +236,7 @@ function _iwps_get_all_scores(&$node) {
 
 function _iwps_generate_rows($allscores) {
   $rows = array();
-  foreach($allscores as $uid => $score) {
+  foreach ($allscores as $uid => $score) {
     // skip performers with less than 2 ranks
     if (count($score['ranks']) < 2) {
       continue;
@@ -247,7 +247,7 @@ function _iwps_generate_rows($allscores) {
     $r = $score['ranks'];
     $s = $score['scores'];
     // TODO Should be a variable set on the tourney
-    for($i = 0; $i < 4; $i++) {
+    for ($i = 0; $i < 4; $i++) {
       $row[] = isset($r[$i])?$r[$i]:'';
       $row[] = isset($s[$i])?$s[$i]:'';
     }
@@ -264,7 +264,7 @@ function _iwps_get_final_place($allscores) {
   $place = 0;
   $prev_rank = -1;
   $prev_score = -1;
-  for($i = 0; $i < count($allscores); $i++) {
+  for ($i = 0; $i < count($allscores); $i++) {
     if ($i == 0 || $prev_rank != $allscores[$i]['totalrank'] || ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_score, $allscores[$i]['totalscore']) !== 0)) {
       $place = $i + 1;
     }
@@ -279,7 +279,7 @@ function _iwps_get_final_place($allscores) {
 function _iwps_get_finalists($allscores, $num, $key = "place") {
   $finalists = array(); 
   $finalists = array_slice($allscores, 0, $num);
-  while($finalists[count($finalists) - 1][$key] === $allscores[$num][$key]) {
+  while ($finalists[count($finalists) - 1][$key] === $allscores[$num][$key]) {
     $finalists[] = $allscores[$num++];
   }
   return $finalists;
