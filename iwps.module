@@ -163,31 +163,64 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
   if (is_numeric(arg(4)) && is_numeric(arg(6)) && is_numeric(arg(7))) {
     $performer = user_load(arg(4));
     $bout = node_load(arg(6));
-    $action = arg(2) == 'add'? 'Add' : 'Edit';
+
+    $action = arg(1) == 'add'? 'Add' : 'Edit';
     // TODO check if a performance for this performer/rotation already exists
     // actually we need to do that in the save process
+    $bout_id = field_get_items('node', $bout, 'field_bout');
+    $rotation = arg(7);
+    if ($action === 'Add') {
+      $existing_performance = _load_performances_in_bout($bout_id[0]['tid'], $rotation, $performer->uid);
+      if ($existing_performance != null) {
+        drupal_set_message(t('Performance for this rotation exists, switched to edit form.'));
+        $path = 'node/'. $existing_performance->nid . '/edit/performer/' . $performer->uid . '/bout/' . $bout->nid . '/' . $rotation;
+        drupal_goto($path);
+      }
+    }
 
     drupal_set_title(t($action . ' performance for ' . $performer->name));
 
+    // default poem name is "untitled"
+    $form['title']['#default_value'] = t('Untitled');
+
     $form_state['iwps']['performer'] = $performer;
+    $form_state['iwps']['rotation'] = $rotation;
     $form_state['iwps']['bout'] = $bout;
+    $form_state['iwps']['bout_id'] = $bout_id[0]['tid'];
     $bout_type = field_get_items('node', $bout, 'field_bout_type');
 
-    $form['title']['#default_value'] = t('Untitled');
 
     $form['field_individual_performer']['und']['#type'] = 'value';
     $form['field_individual_performer']['und']['#value'] =  $performer->uid;
     
-    $rotation = arg(7);
 
     $form['field_rotation']['und'][0]['value']['#default_value'] =  $rotation;
 
     // Converting the bout from textfield to 'value' so its not exposed in this form
-    $bout_id = field_get_items('node', $bout, 'field_bout');
     $form['field_bout']['und']['#type'] = 'value';
     $form['field_bout']['und']['#value'] =  $bout_id[0]['tid'];
 
     $form['actions']['submit']['#submit'][] = 'iwps_performance_set_redirect'; 
+  }
+}
+
+
+/**
+ * Implements hook_form_validate().
+ */
+
+function iwps_node_validate($node, $form, &$form_state) {
+  if ($node->type == 'individual_performance') {
+    $pid = $form_state['iwps']['performer']->uid;
+    $bout_id = $form_state['iwps']['bout_id'];
+    $rotation = $form_state['iwps']['rotation']; 
+    $performance = _load_performances_in_bout($bout_id, $rotation, $pid);
+    if(!isset($node->nid) && $performance != null) { 
+      drupal_get_messages();
+      drupal_set_message(t('Already a performance for this poet in this rotation, switched to edit mode.'), 'error');
+      $path = 'node/'. $performance->nid . '/edit/performer/' . $form_state['iwps']['performer']->uid . '/bout/' . $form_state['iwps']['bout']->nid . '/' . $form_state['iwps']['rotation'];
+      drupal_goto($path);
+    }
   }
 }
 
@@ -211,9 +244,22 @@ function iwps_performance_set_redirect( $form, &$form_state) {
   $form_state['redirect'] = $redirect;
 }
 
+/**
+ * Implents hook_save().
+ */
+/**
+* Implements hook_insert().
+*/
+function iwps_individual_performance_insert($node) {
+  // log details of the job posting to watchdog
+  watchdog('iwps', 'A new performance post titled: '.$node->title.' for performer: '.  $node->performer['und'][0]['value'].  ' was added by UID: '.$node->uid, $variables = array(),
+  WATCHDOG_NOTICE, $link = 'node/'.$node->nid);
+}
+
+
 
 /**
- * Validate the form.
+ * Validate the draw form.
  */
 function iwps_draw_form_validate($form, &$form_state) {
   // We notify the form API that this field has failed validation.
@@ -260,11 +306,18 @@ function iwps_draw_form_submit($form, &$form_state) {
 }
 
 /**
- * Sets up an empy page we can drop our block view onto.
+ * Display the tournament_bouts_list view, passing in the tid for the tournament.
  */
 function iwps_bouts_list($node) {
   drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Bouts');
-  $output = '';
+  $view = views_get_view('tournament_bouts_list');
+  $tids = field_get_items('node', $node, 'field_term_tournament');
+  $tid = isset($tids) ? $tids[0]['tid'] : 0;
+  $args[] = $tid;
+
+  $display_id = 'default';
+  $output = $view->execute_display($display_id, $args);
+
   return $output;
 }
 
@@ -275,7 +328,7 @@ function iwps_poet_list($node) {
   drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Poets');
   $poets = array();
   $names = array();
-  $output = '';
+  $output = t('No poets added to roster yet.');
   if (isset($node->field_competing_poets[$node->language])) {
     foreach ($node->field_competing_poets[$node->language] as  $uid){
       $poets[] = $uid['uid'];
@@ -283,12 +336,10 @@ function iwps_poet_list($node) {
     $users = user_load_multiple($poets);
     foreach ($users as $uid => $user) {
       $names[] = $user->name;
+      $output = '';
     }
     if (count($poets) > 0) {
       $output .= theme('item_list', array('items' => $names, 'title' => t('Competing Poets')));
-    }
-    else {
-      $output .= t('No poets added to roster yet.');
     }
   }
   return $output;
