@@ -558,8 +558,10 @@ function _iwps_final_bout_view($node) {
  */
 function _iwps_preliminary_bout_view($node) {
   // get all performers for this bout from the draw  
- $users = _load_users_by_bout_number($node->nid);   
+ $tourney = field_get_items('node', $node, 'field_tournament');
+ $tid = $tourney[0]['nid'];
 
+ $users = _load_users_by_bout_number($node->nid, $tid);   
  if (count($users) <= 0) {
   $node->content['scores'] = array(
     '#markup' => t('The draw is not yet complete.'),
