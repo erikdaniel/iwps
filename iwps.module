@@ -363,10 +363,10 @@ function iwps_finals_page($node) {
   $num_competitors = isset($node->field_num_competitors[$node->language][0]['value'])? $node->field_num_competitors[$node->language][0]['value']:-1;
   $allscores = _iwps_get_all_scores($node);
 
-  // competition not complete
-  if (count($allscores) < $num_competitors) {
+  if (!_iwps_tournament_complete($allscores, $num_competitors)) {
     return $output;
   }
+
   $scores = _iwps_get_final_place($allscores);
 
   $num_finalists = isset($node->field_num_finalists[$node->language][0]['value'])? $node->field_num_finalists[$node->language][0]['value']:0;
@@ -558,8 +558,10 @@ function _iwps_final_bout_view($node) {
  */
 function _iwps_preliminary_bout_view($node) {
   // get all performers for this bout from the draw  
- $users = _load_users_by_bout_number($node->nid);   
+ $tourney = field_get_items('node', $node, 'field_tournament');
+ $tid = $tourney[0]['nid'];
 
+ $users = _load_users_by_bout_number($node->nid, $tid);   
  if (count($users) <= 0) {
   $node->content['scores'] = array(
     '#markup' => t('The draw is not yet complete.'),

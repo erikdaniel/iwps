@@ -8,9 +8,9 @@
 /**
  * Load user ids by bout number.
  */
-function _load_users_by_bout_number($bid) {
+function _load_users_by_bout_number($bid, $tid) {
   $uids = array();
-  $result = db_query('SELECT id.draw_number, id.uid FROM {iwps_draw} as id LEFT JOIN {iwps_bout_schematic} as ibs ON (ibs.draw_number = id.draw_number) WHERE ibs.bid = :bid', array(':bid' => $bid));
+  $result = db_query('SELECT id.draw_number, id.uid FROM {iwps_draw} as id LEFT JOIN {iwps_bout_schematic} as ibs ON (ibs.draw_number = id.draw_number) WHERE ibs.bid = :bid AND id.tid = :tid', array(':bid' => $bid, ':tid' => $tid));
   foreach ($result as $record) {
     $uids[] = $record->uid;
   }
@@ -283,6 +283,18 @@ function _iwps_get_finalists($allscores, $num, $key = "place") {
     $finalists[] = $allscores[$num++];
   }
   return $finalists;
+}
+
+
+function _iwps_tournament_complete($allscores, $num_competitors) {
+  $total = 0;
+  for ($i = 0; $i < count($allscores); $i++) {
+    if (count($allscores[$i]['scores']) >= 2) {
+      $total++;
+    }
+  }
+  return $total >= $num_competitors;
+
 }
 
 
