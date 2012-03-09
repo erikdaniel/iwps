@@ -286,3 +286,15 @@ function _iwps_get_finalists($allscores, $num, $key = "place") {
 }
 
 
+function _iwps_tournament_complete($allscores, $num_competitors) {
+  $total = 0;
+  for ($i = 0; $i < count($allscores); $i++) {
+    if (count($allscores[$i]['scores']) >= 2) {
+      $total++;
+    }
+  }
+  return $total >= $num_competitors;
+
+}
+
+

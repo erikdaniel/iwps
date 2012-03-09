@@ -363,10 +363,10 @@ function iwps_finals_page($node) {
   $num_competitors = isset($node->field_num_competitors[$node->language][0]['value'])? $node->field_num_competitors[$node->language][0]['value']:-1;
   $allscores = _iwps_get_all_scores($node);
 
-  // competition not complete
-  if (count($allscores) < $num_competitors) {
+  if (!_iwps_tournament_complete($allscores, $num_competitors)) {
     return $output;
   }
+
   $scores = _iwps_get_final_place($allscores);
 
   $num_finalists = isset($node->field_num_finalists[$node->language][0]['value'])? $node->field_num_finalists[$node->language][0]['value']:0;
@@ -662,106 +662,6 @@ function _iwps_preliminary_bout_view($node) {
       '#weight' => 100,
     );
   }    
-
- if (count($users) <= 0) {
-  $node->content['scores'] = array(
-    '#markup' => t('The draw is not yet complete.'),
-    '#weight' => 100,
-  );
- }
- else {
-   $bout_term_arr = field_get_items('node', $node, 'field_bout');
-   $bout_id = $bout_term_arr[0]['tid'];
-
-   $header = array(t('Performer'), t('Score'), t('Rank*'));
-    
-    // Handle Rotation 1 
-   $output = '<h2>Rotation 1</h2>';
-   $scores = array();
-   $rows = array();
-   $ranks = array();
-   $weight = 0;
-   foreach ($users as $uid => $u) {
-     // check if there are existing scores for this user
-     // TODO this could be one call to save DB loads
-     $score = _load_performances_in_bout($bout_id, 1, $u->uid);
-     $tid = $node->field_bout;
-     // push score after this
-     $row = array(
-       'performer' => l($u->name, 'user/' . $u->uid),
-       'score' => count($score) ? $score->field_score[$node->language][0]['value'] : '' ,
-       'rank' => '',
-     );
-
-     // add rank
-     if ($score) {
-       $ranks = _iwps_get_ranks_in_bout_rotation($bout_id, 1, 'ASSOC');
-       $row['rank'] = $ranks[$u->uid]['rank'];
-      }
-
-      // check if user has admin access,
-      // push action column if so
-      if (user_access('create individual_performance content')) {
-        if ($score) {
-          $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $u->uid . '/bout/' . $node->nid . '/1') ;
-        }
-        else {
-          $row['action'] =  l('Enter', 'node/add/individual-performance/performer/' . $u->uid . '/bout/' . $node->nid . '/1');
-        }
-      }
-      $rows[] = $row;
-    }
-    // check if user has admin access to scores
-    // add "action" column if so
-    if (user_access('create individual_performance content')) {
-      $header[] = t('Action');
-    }
-    $output .= theme('table', array('header' => $header, 'rows' => $rows));
-    // END of Rotation 1
-
-          // Handle Rotation 2
-    if (count($ranks) > 0) {
-    // sort ranks 
-      $ranks = _iwps_sort_rotation($ranks, $users);
-      $rows = array();
-
-      $output .= t('<h2>Rotation 2</h2>');
-      foreach ($ranks as $uid => $rank) {
-        $uid = $rank['uid'];
-        $score = _load_performances_in_bout($bout_id, 2, $uid);
-        $row = array(
-          'performer' => l($rank['performer'], 'user/' . $uid),
-          'score' => count($score) ? $score->field_score[$node->language][0]['value'] : '',
-          'rank' => '',
-        );
-
-        // add rank
-        if ($score) {
-          $ranks = _iwps_get_ranks_in_bout_rotation($bout_id, 2, 'ASSOC');
-          $row['rank'] = $ranks[$uid]['rank'];
-        }
-
-        // check if user has admin access,
-        // push action column if so
-        if (user_access('create individual_performance content')) {
-          if ($score) {
-            $row['action'] =  l('Edit', 'node/' . $score->nid . '/edit/performer/' . $uid . '/bout/' . $node->nid . '/2') ;
-          }
-          else {
-            $row['action'] =  l('Enter', 'node/add/individual-performance/performer/' . $uid . '/bout/' . $node->nid . '/2');
-          }
-        }
-        $rows[] = $row;
-      }
-      $output .= theme('table', array('header' => $header, 'rows' => $rows));
-    }
-
-    $output .= t('<p class="small">* Rank in rotation</p>');
-    $node->content['scores'] = array(
-      '#markup' => $output,
-      '#weight' => 100,
-    );
-  }
 }
 
 /**
