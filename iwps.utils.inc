@@ -265,7 +265,7 @@ function _iwps_get_final_place($allscores) {
   $prev_rank = -1;
   $prev_score = -1;
   for ($i = 0; $i < count($allscores); $i++) {
-    if ($i == 0 || $prev_rank != $allscores[$i]['totalrank'] || ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_score, $allscores[$i]['totalscore']) !== 0)) {
+    if ($i == 0 || $prev_rank != $allscores[$i]['totalrank'] || ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_score, $allscores[$i]['totalscore'], 1) !== 0)) {
       $place = $i + 1;
     }
     $allscores[$i]['place'] = $place;
@@ -289,7 +289,7 @@ function _iwps_get_finalists($allscores, $num, $key = "place") {
 function _iwps_tournament_complete($allscores, $num_competitors) {
   $total = 0;
   for ($i = 0; $i < count($allscores); $i++) {
-    if (count($allscores[$i]['scores']) >= 2) {
+    if (count($allscores[$i]['scores']) >= 4) {
       $total++;
     }
   }

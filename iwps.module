@@ -22,8 +22,7 @@ function iwps_menu() {
     'description' => 'Draw for this tournament.',
     'page callback' => 'iwps_bouts_list',
     'page arguments' => array(1),
-    'access callback' => 'iwps_bouts_access',
-    'access arguments' => array(1),
+    'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
     );
@@ -62,8 +61,7 @@ function iwps_menu() {
     'description' => 'Scores for this bout.',
     'page callback' => 'iwps_scores_page',
     'page arguments' => array(1),
-    'access callback' => 'iwps_bouts_access',
-    'access arguments' => array(1),
+    'access arguments' => array( 'access content' ),
     'type' => MENU_LOCAL_TASK,
     'weight' => 12,
     );
@@ -309,6 +307,11 @@ function iwps_draw_form_submit($form, &$form_state) {
  * Display the tournament_bouts_list view, passing in the tid for the tournament.
  */
 function iwps_bouts_list($node) {
+ // Overrides team tournament
+  if ($node->type == 'tournament' && function_exists('scorecreep_bouts_list')) {
+    return scorecreep_bouts_list($node);
+  }
+
   drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Bouts');
   $view = views_get_view('tournament_bouts_list');
   $tids = field_get_items('node', $node, 'field_term_tournament');
