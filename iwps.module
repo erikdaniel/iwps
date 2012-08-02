@@ -22,7 +22,8 @@ function iwps_menu() {
     'description' => 'Draw for this tournament.',
     'page callback' => 'iwps_bouts_list',
     'page arguments' => array(1),
-    'access arguments' => array('access content'),
+    'access callback' => 'iwps_bouts_access',
+    'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
     );
@@ -658,7 +659,6 @@ function _iwps_preliminary_bout_view($node) {
       }
       $output .= theme('table', array('header' => $header, 'rows' => $rows));
     }
-
     $output .= t('<p class="small">* Rank in rotation</p>');
     $node->content['scores'] = array(
       '#markup' => $output,
