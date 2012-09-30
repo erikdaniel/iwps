@@ -313,6 +313,7 @@ function iwps_bouts_list($node) {
   if ($node->type == 'tournament' && function_exists('scorecreep_bouts_list')) {
     return scorecreep_bouts_list($node);
   }
+
   drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Bouts');
   $view = views_get_view('tournament_bouts_list');
   $tids = field_get_items('node', $node, 'field_term_tournament');
