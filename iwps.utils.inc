@@ -4,22 +4,64 @@
  * 
  * Helper methods for IWPS module.
  */
+/**
+ * Get bout node id from term.
+ */
+function _iwps_get_bout_node_id_from_term($bout_term) {
+  $query = new EntityFieldQuery();
+  $bid = null;
+  $query
+    ->entityCondition('entity_type', 'node', '=')
+    ->propertyCondition('type', 'scorecreep_bout', '=')
+    //->fieldCondition('field_bout_type', 'field_bout_type_value', 'individual', '=')
+    ->fieldCondition('field_bout', 'tid', $bout_term);
+
+
+  $bouts = $query->execute();
+
+  if ($bouts) {
+      $bid = array_shift(array_keys($bouts['node']));
+  }
+  return $bid;
+}
+
 
 /**
- * Load user ids by bout number.
+ * Get array of users ids by bout and tournament number.
  */
-function _load_users_by_bout_number($bid, $tid) {
+function _get_uids_by_bout_number($bid, $tid) {
   $uids = array();
   $result = db_query('SELECT id.draw_number, id.uid FROM {iwps_draw} as id LEFT JOIN {iwps_bout_schematic} as ibs ON (ibs.draw_number = id.draw_number) WHERE ibs.bid = :bid AND id.tid = :tid', array(':bid' => $bid, ':tid' => $tid));
   foreach ($result as $record) {
     $uids[] = $record->uid;
   }
+  return $uids;
+}
+
+/**
+ * Load user ids by bout number.
+ */
+function _load_users_by_bout_number($bid, $tid) {
+  $uids = _get_uids_by_bout_number($bid, $tid);
+  /*
+  $result = db_query('SELECT id.draw_number, id.uid FROM {iwps_draw} as id LEFT JOIN {iwps_bout_schematic} as ibs ON (ibs.draw_number = id.draw_number) WHERE ibs.bid = :bid AND id.tid = :tid', array(':bid' => $bid, ':tid' => $tid));
+  foreach ($result as $record) {
+    $uids[] = $record->uid;
+  }
+  */
   $users = user_load_multiple($uids);
   $weight = 0;
   foreach ($users as $user) {
     $user->iwps_weight = $weight++;
   }
   return $users; 
+}
+
+/**
+ * Get all opponents a user has faced in the tournament.
+ */
+function _get_all_opponents($uid, $tid) {
+
 }
 
 /**
@@ -32,7 +74,6 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
     ->entityCondition('entity_type', 'node')
     ->propertyCondition('type', 'individual_performance')
     ->fieldCondition('field_bout', 'tid', $bid, '=', 0)
-  //  ->fieldCondition('field_bout', 'tid', $bid)
     ->fieldCondition('field_rotation', 'value', $rotation);
   if ($perf) {
     $query->fieldCondition('field_individual_performer', 'uid', $perf);
@@ -171,6 +212,8 @@ function _set_allscores($node) {
         'totalrank' => NULL,
         'totalscore' => NULL,
         'totalscore' => NULL,
+        'opponents' => array(),
+        'strength' => NULL,
       );
     }
   }
@@ -189,18 +232,48 @@ function _iwps_sort_final_scores(&$allscores) {
   return array_multisort($totalrank, SORT_ASC, $totalscore, SORT_DESC, $allscores);
 }
 
-function _iwps_sort_all_scores($allscores) {
+function _iwps_sort_all_scores($allscores, $use_strength = false) {
   if (count($allscores) <= 0) {
     return $allscores;
   }
 
   foreach ($allscores as $uid => $score) {
     $trank[$uid] = $score['totalrank'];
+    $tstrength[$uid] = $score['strength'];
     $tscore[$uid] = $score['totalscore'];
     $allscores[$uid]['uid'] = $uid;
   }
-  array_multisort($trank, SORT_ASC, $tscore, SORT_DESC, $allscores);
+  if ($use_strength) {
+    array_multisort($trank, SORT_ASC, $tstrength, SORT_ASC, $tscore, SORT_DESC, $allscores);
+  }
+  else {
+    array_multisort($trank, SORT_ASC, $tscore, SORT_DESC, $allscores);
+  }
   return $allscores;
+}
+
+function _iwps_set_opponents_list(&$allscores, $poets_in_bout) {
+  $count = count($poets_in_bout);
+  for ($i = 0; $i < $count; $i++) {
+    $current_user = $poets_in_bout[$i];
+    for ($j = 0; $j < $count; $j++) {
+      if ($poets_in_bout[$j] != $current_user) {
+        $allscores[$current_user]['opponents'][] = $poets_in_bout[$j];
+      }
+    }
+  }
+}
+
+function _iwps_set_relative_strength(&$allscores, $uid) {
+  $opp_list = $allscores[$uid]['opponents'];
+  $total_ranks = array();
+  $count = count( $opp_list );
+  for($i = 0;$i < $count; $i++) {
+    $total_ranks[] = $allscores[$opp_list[$i]]['totalrank'];
+  }
+  if (count($total_ranks) > 0) {
+    $allscores[$uid]['strength'] = number_format(array_sum($total_ranks) / count($total_ranks), 2);
+  }
 }
 
 function _iwps_get_all_scores(&$node) {
@@ -216,6 +289,10 @@ function _iwps_get_all_scores(&$node) {
       if ($term->name === "Finals") {
         continue;
       }
+      $bout_nid = _iwps_get_bout_node_id_from_term($bid);
+      $poets_in_bout = _get_uids_by_bout_number($bout_nid, $node->nid);
+      _iwps_set_opponents_list($allscores, $poets_in_bout);
+
       // loop through the rotations
       for ($i = 1; $i < 3; $i++) { 
         $rotation = _iwps_get_ranks_in_bout_rotation($bid, $i, 'ASSOC');
@@ -227,14 +304,21 @@ function _iwps_get_all_scores(&$node) {
       }
     }
   }
+  
   foreach ($allscores as $uid => $scores) {
     $allscores[$uid]['totalrank'] = array_sum($allscores[$uid]['ranks']);
     $allscores[$uid]['totalscore'] = array_sum($allscores[$uid]['scores']);
   }
-  return _iwps_sort_all_scores($allscores);
+  $use_strength = array_shift(field_get_items('node', $node, 'field_use_strength'));
+  if ($use_strength['value']) {
+    foreach ($allscores as $uid => $scores) {
+      _iwps_set_relative_strength($allscores, $uid);
+    }
+  }
+  return _iwps_sort_all_scores($allscores, $use_strength['value']);
 }
 
-function _iwps_generate_rows($allscores) {
+function _iwps_generate_rows($allscores, $use_strength) {
   $rows = array();
   foreach ($allscores as $uid => $score) {
     // skip performers with less than 2 ranks
@@ -252,25 +336,31 @@ function _iwps_generate_rows($allscores) {
       $row[] = isset($s[$i])?$s[$i]:'';
     }
     $row[] = $score['totalrank'];
+    if ($use_strength ==1) {
+      $row[] = $score['strength'];
+    }
     $row[] = $score['totalscore'];
-
     $rows[] = $row;
   }
-  //_iwps_sort_final_scores($rows);
   return $rows;
 }
 
 function _iwps_get_final_place($allscores) {
   $place = 0;
   $prev_rank = -1;
+  $prev_strength = -1;
   $prev_score = -1;
   for ($i = 0; $i < count($allscores); $i++) {
-    if ($i == 0 || $prev_rank != $allscores[$i]['totalrank'] || ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_score, $allscores[$i]['totalscore'], 1) !== 0)) {
+    if ($i == 0 || 
+      $prev_rank != $allscores[$i]['totalrank'] || 
+      ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_strength, $allscores[$i]['strength'], 2) !== 0) || 
+      ($prev_rank == $allscores[$i]['totalrank'] && bccomp($prev_strength, $allscores[$i]['strength'], 2) == 0 && bccomp($prev_score, $allscores[$i]['totalscore'], 1) !== 0)) {
       $place = $i + 1;
     }
     $allscores[$i]['place'] = $place;
 
     $prev_rank = $allscores[$i]['totalrank'];
+    $prev_strength = $allscores[$i]['totalscore'];
     $prev_score = $allscores[$i]['totalscore'];
   }
   return $allscores;

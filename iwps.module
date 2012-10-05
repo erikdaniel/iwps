@@ -718,6 +718,8 @@ function iwps_bout_results($node) {
  */
 function iwps_scores_page($node) {
   drupal_set_title($node->field_shortname[$node->language][0]['value'] . ' : Preliminary Scores');
+  $use_strength = $node->field_use_strength[$node->language][0]['value'];
+
   $output = t('There are no scores for this tournament.');
 
   // get tournament taxonomy term
@@ -725,8 +727,13 @@ function iwps_scores_page($node) {
   if ($cat) {
     $allscores = _iwps_get_final_place(_iwps_get_all_scores($node)); 
     // go through the allscores array setting the rows for the table
-    $header = array(t("Place"), t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"), t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"), t("Total Score"));
-    $rows = _iwps_generate_rows($allscores);
+    $header = array(t("Place"), t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"), t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"));
+    if ($use_strength == 1) {
+      $header[] = t("Relative Strength");
+    }
+    
+    $header[] = t("Total Score");
+    $rows = _iwps_generate_rows($allscores, $use_strength);
     if (count($rows) > 0) {
       $output = theme('table', array('header' => $header, 'rows' => $rows));
     }
