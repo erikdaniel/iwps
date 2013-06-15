@@ -304,7 +304,6 @@ function _iwps_get_all_scores(&$node) {
       }
     }
   }
-
   foreach ($allscores as $uid => $scores) {
     $allscores[$uid]['totalrank'] = array_sum($allscores[$uid]['ranks']);
     $allscores[$uid]['totalscore'] = array_sum($allscores[$uid]['scores']);
