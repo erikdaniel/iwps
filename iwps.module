@@ -3,13 +3,13 @@
  * @file
  * IWPS Module
  * Scorekeeping for individual tournaments.
- * 
- * TODO: Remove poets from draw when users are 
+ *
+ * TODO: Remove poets from draw when users are
  * removed from tournament.
  * TODO: Breadcrumbs
  */
 
-module_load_include('inc', 'iwps', 'iwps.utils');   
+module_load_include('inc', 'iwps', 'iwps.utils');
 
 /**
  * Implement hook_menu().
@@ -91,7 +91,7 @@ function iwps_draw_access($node) {
  * Callback access method for bouts tab.
  */
 function iwps_bouts_access($node) {
-  return $node->type == 'individual_tournament';  
+  return $node->type == 'individual_tournament';
 }
 
 /**
@@ -102,7 +102,7 @@ function iwps_bout_results_access($node) {
   if (isset($node->field_bout_type[$node->language])) {
     $bout_type = $node->field_bout_type[$node->language][0]['value'];
   }
-  return $node->type == 'scorecreep_bout' && $bout_type == 'individual';  
+  return $node->type == 'scorecreep_bout' && $bout_type == 'individual';
 }
 
 /**
@@ -135,7 +135,7 @@ function iwps_draw_form($form, &$form_state, $node) {
         '#size' => 10,
         '#maxlength' => 2,
         '#required' => TRUE,
-      ); 
+      );
       if (isset($draw[$uid])) {
         $form['draw'][$uid]['#default_value'] = $draw[$uid];
       }
@@ -192,7 +192,7 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
 
     $form['field_individual_performer']['und']['#type'] = 'value';
     $form['field_individual_performer']['und']['#value'] =  $performer->uid;
-    
+
 
     $form['field_rotation']['und'][0]['value']['#default_value'] =  $rotation;
 
@@ -200,7 +200,7 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
     $form['field_bout']['und']['#type'] = 'value';
     $form['field_bout']['und']['#value'] =  $bout_id[0]['tid'];
 
-    $form['actions']['submit']['#submit'][] = 'iwps_performance_set_redirect'; 
+    $form['actions']['submit']['#submit'][] = 'iwps_performance_set_redirect';
   }
 }
 
@@ -213,9 +213,9 @@ function iwps_node_validate($node, $form, &$form_state) {
   if ($node->type == 'individual_performance') {
     $pid = $form_state['iwps']['performer']->uid;
     $bout_id = $form_state['iwps']['bout_id'];
-    $rotation = $form_state['iwps']['rotation']; 
+    $rotation = $form_state['iwps']['rotation'];
     $performance = _load_performances_in_bout($bout_id, $rotation, $pid);
-    if (!isset($node->nid) && $performance != NULL) { 
+    if (!isset($node->nid) && $performance != NULL) {
       drupal_get_messages();
       drupal_set_message(t('Already a performance for this poet in this rotation, switched to edit mode.'), 'error');
       $path = 'node/' . $performance->nid . '/edit/performer/' . $form_state['iwps']['performer']->uid . '/bout/' . $form_state['iwps']['bout']->nid . '/' . $form_state['iwps']['rotation'];
@@ -238,7 +238,7 @@ function iwps_performance_set_redirect( $form, &$form_state) {
   // The finals is a special case, redirect to the tourney
   if ( $bout_type[0]['value'] == 'individual_final') {
     $tournament_nid = field_get_items('node', $bout, 'field_tournament');
-    $redirect = 'node/' . $tournament_nid[0]['nid'] . '/finals'; 
+    $redirect = 'node/' . $tournament_nid[0]['nid'] . '/finals';
   }
   //$alias = drupal_lookup_path('alias', 'node/' . $bout_id);
   $form_state['redirect'] = $redirect;
@@ -350,7 +350,7 @@ function iwps_poet_list($node) {
   return $output;
 }
 
-/** 
+/**
  * Callback for displaying the finals page.
  */
 function iwps_finals_page($node) {
@@ -412,7 +412,7 @@ function iwps_finals_page($node) {
 
   $rows = array();
   $r1scores = _iwps_get_ranks_in_bout_rotation($bout_tid, 1, 'ASSOC');
-   
+
   for ($i = 0; $i < count($finalists); $i++) {
     $uid = $finalists[$i]['uid'];
     if (isset($r1scores[$uid])) {
@@ -523,7 +523,7 @@ function iwps_finals_page($node) {
   }
   usort($rows, "array_sort_by_rank");
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
-  
+
   return $output;
 }
 
@@ -541,7 +541,7 @@ function iwps_node_view($node, $view_mode) {
     $bout_type = $node->field_bout_type[$node->language][0]['value'];
   }
   if ($view_mode == 'full' && $bout_type == 'individual') {
-    $node = _iwps_preliminary_bout_view($node);     
+    $node = _iwps_preliminary_bout_view($node);
   }
   elseif ($view_mode == 'full' && $bout_type == 'individual_final') {
     //$node = _iwps_final_bout_view($node);
@@ -562,11 +562,11 @@ function _iwps_final_bout_view($node) {
  * Prelim bout.
  */
 function _iwps_preliminary_bout_view($node) {
-  // get all performers for this bout from the draw  
+  // get all performers for this bout from the draw
  $tourney = field_get_items('node', $node, 'field_tournament');
  $tid = $tourney[0]['nid'];
 
- $users = _load_users_by_bout_number($node->nid, $tid);   
+ $users = _load_users_by_bout_number($node->nid, $tid);
  if (count($users) <= 0) {
   $node->content['scores'] = array(
     '#markup' => t('The draw is not yet complete.'),
@@ -579,8 +579,8 @@ function _iwps_preliminary_bout_view($node) {
    $bout_id = $bout_term_arr[0]['tid'];
 
    $header = array(t('Performer'), t('Score'), t('Rank*'));
-    
-    // Handle Rotation 1 
+
+    // Handle Rotation 1
    $output = '<h2>Rotation 1</h2>';
    $scores = array();
    $rows = array();
@@ -626,7 +626,7 @@ function _iwps_preliminary_bout_view($node) {
 
           // Handle Rotation 2
     if (count($ranks) > 0) {
-    // sort ranks 
+    // sort ranks
       $ranks = _iwps_sort_rotation($ranks, $users);
       $rows = array();
 
@@ -665,7 +665,7 @@ function _iwps_preliminary_bout_view($node) {
       '#markup' => $output,
       '#weight' => 100,
     );
-  }    
+  }
 }
 
 /**
@@ -686,7 +686,7 @@ function iwps_bout_results($node) {
   $bout_id = $bout_term_arr[0]['tid'];
   $ranks_1 = _iwps_get_ranks_in_bout_rotation($bout_id, 1, 'ASSOC');
   $ranks_2 = _iwps_get_ranks_in_bout_rotation($bout_id, 2, 'ASSOC');
-  
+
   if (count($ranks_1) > 0 && count($ranks_1) == count($ranks_2)) {
     $rows = array();
     foreach ($ranks_1 as $uid => $rank) {
@@ -725,15 +725,18 @@ function iwps_scores_page($node) {
   // get tournament taxonomy term
   $cat = field_get_items('node', $node, 'field_term_tournament');
   if ($cat) {
-    $allscores = _iwps_get_final_place(_iwps_get_all_scores($node)); 
+    $allscores = _iwps_get_final_place(_iwps_get_all_scores($node));
     // go through the allscores array setting the rows for the table
     $header = array(t("Place"), t("Performer"), t("Rank 1"), t("Score 1"), t("Rank 2"), t("Score 2"), t("Rank 3"), t("Score 3"), t("Rank 4"), t("Score 4"), t("Total Rank"));
     if ($use_strength == 1) {
       $header[] = t("Relative Strength");
     }
-    
+
     $header[] = t("Total Score");
-    $rows = _iwps_generate_rows($allscores, $use_strength);
+
+    $num_competitors = $node->field_num_competitors['und'][0]['value'];
+
+    $rows = _iwps_generate_rows($allscores, $use_strength, $num_competitors);
     if (count($rows) > 0) {
       $output = theme('table', array('header' => $header, 'rows' => $rows));
     }
@@ -752,7 +755,7 @@ function _iwps_get_finals_node($node) {
   $term_arr = field_get_items('node', $node, 'field_term_tournament');
   $tournament_tid = $term_arr[0]['tid'];
   $children = taxonomy_get_children($tournament_tid);
-  
+
   foreach ($children as $key => $value) {
     if (isset($value->name) && $value->name == 'Finals') {
       $tid = $value->tid;
