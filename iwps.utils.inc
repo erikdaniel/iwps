@@ -76,7 +76,7 @@ function _load_performances_in_bout($bid, $rotation, $perf = NULL) {
     ->fieldCondition('field_bout', 'tid', $bid, '=', 0)
     ->fieldCondition('field_rotation', 'value', $rotation);
   if ($perf) {
-    $query->fieldCondition('field_individual_performer', 'uid', $perf);
+    $query->fieldCondition('field_individual_performer', 'target_id', $perf);
   }
   $result = $query->execute();
   $n = NULL;
@@ -119,7 +119,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
   $performances = entity_load('node', $pids);
   $poets = array();
   foreach ($performances as $perf) {
-    $poet_id = $perf->field_individual_performer[$perf->language][0]['uid'];
+    $poet_id = $perf->field_individual_performer[$perf->language][0]['target_id'];
     $poets[]  = $poet_id;
   }
 
@@ -127,7 +127,7 @@ function _iwps_get_ranks_in_bout_rotation($bid, $rotation, $type = 'array') {
 
 
   foreach ($performances as $perf) {
-    $poet_id = $perf->field_individual_performer[$perf->language][0]['uid'];
+    $poet_id = $perf->field_individual_performer[$perf->language][0]['target_id'];
     $scores[] = array(
       'rank' => 0,
       'performer' => $poet_nodes[$poet_id]->name,
@@ -203,7 +203,7 @@ function _set_allscores($node) {
   $allscores = array();
   if (isset($node->field_competing_poets[$node->language])) {
     foreach ($node->field_competing_poets[$node->language] as  $uid) {
-      $u = $uid['uid'];
+      $u = $uid['target_id'];
       $user = user_load($u);
       $allscores[$u] = array(
         'performer' => $user->name,

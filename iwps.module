@@ -165,8 +165,6 @@ function iwps_form_individual_performance_node_form_alter(&$form, &$form_state) 
     $bout = node_load(arg(6));
 
     $action = arg(1) == 'add'? 'Add' : 'Edit';
-    // TODO check if a performance for this performer/rotation already exists
-    // actually we need to do that in the save process
     $bout_id = field_get_items('node', $bout, 'field_bout');
     $rotation = arg(7);
     if ($action === 'Add') {
@@ -251,7 +249,6 @@ function iwps_performance_set_redirect( $form, &$form_state) {
 * Implements hook_insert().
 */
 function iwps_individual_performance_update($node) {
-  // log details of the job posting to watchdog
   watchdog('iwps', 'A performance post updated: ' . $node->title . ' for performer: ' . $node->performer['und'][0]['value'] . ' was updated by UID: ' . $node->uid, $variables = array(),
   WATCHDOG_NOTICE, $link = 'node/' . $node->nid);
 }
@@ -383,11 +380,20 @@ function iwps_finals_page($node) {
   $scorekeeper = user_access('create individual_performance content');
 
   // load all the scores for this bout
-
-  $output = '<h2>Calibration</h2>';
-  $header = array(t('Performer'), t('Score'));
+  // TODO DRY this up
+  $output = '<h2>' . t('Calibration') . '</h2>';
+  $header = array(
+      t('Performer'),
+      array(
+          "data" => t('Score'),
+          "class" => array("scorecreep_score_cell"),
+      ),
+  );
   if ($scorekeeper) {
-     $header[] = t('Action');
+      $header[] = array(
+          "data" => t('Action'),
+          "class" => array("scorecreep_action_cell"),
+      );
   }
 
   // output the calibration poet
@@ -411,6 +417,7 @@ function iwps_finals_page($node) {
   $output .= '<div class="iwps_legal">This is not the actual order.</div>';
 
   $rows = array();
+
   $r1scores = _iwps_get_ranks_in_bout_rotation($bout_tid, 1, 'ASSOC');
 
   for ($i = 0; $i < count($finalists); $i++) {
@@ -491,7 +498,11 @@ function iwps_finals_page($node) {
   $r3scores = _iwps_get_ranks_in_bout_rotation($bout_tid, 3, 'ASSOC');
 
 
-  array_unshift($header, t("Rank"));
+  array_unshift($header, array(
+      "data" => t("Rank"),
+      "class" => array("scorecreep_rank_cell"),
+      )
+  );
 
   for ($i = 0; $i < count($finalists); $i++) {
     $uid = $finalists[$i]['uid'];
@@ -564,7 +575,7 @@ function _iwps_final_bout_view($node) {
 function _iwps_preliminary_bout_view($node) {
   // get all performers for this bout from the draw
  $tourney = field_get_items('node', $node, 'field_tournament');
- $tid = $tourney[0]['nid'];
+ $tid = $tourney[0]['target_id'];
 
  $users = _load_users_by_bout_number($node->nid, $tid);
  if (count($users) <= 0) {
@@ -619,7 +630,10 @@ function _iwps_preliminary_bout_view($node) {
     // check if user has admin access to scores
     // add "action" column if so
     if (user_access('create individual_performance content')) {
-      $header[] = t('Action');
+        $header[] = array(
+            "data" => t('Action'),
+            "class" => array("iwps_action_cell"),
+        );
     }
     $output .= theme('table', array('header' => $header, 'rows' => $rows));
     // END of Rotation 1
